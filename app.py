@@ -50,6 +50,11 @@ if st.button("Guardar venta"):
         data.append_sale(new_sale, sheet_name=SHEET_NAME)
         st.success("Venta guardada correctamente")
 
-st.subheader("Historial de ventas")
-data_frame = data.load_data()
-st.dataframe(data_frame, use_container_width=True)
+with st.expander("Historial de Ventas"):
+    data_frame = data.load_data()
+    st.dataframe(data_frame, use_container_width=True)
+
+with st.expander("Resumen de Ventas"):
+    summary = data.get_summary()
+    st.write(summary)
+    st.bar_chart(summary)

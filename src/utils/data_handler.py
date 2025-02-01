@@ -36,10 +36,9 @@ class ExcelHandler:
         :param new_sale: Diccionario con los datos de la venta.
         """
         try:
-            df = self.load_data()  # Cargamos los datos actuales
-            # Convertimos la nueva venta en un DataFrame y la concatenamos
+            df = self.load_data()
             df = pd.concat([df, pd.DataFrame([new_sale])], ignore_index=True)
-            self.save_data(df)  # Guardamos el DataFrame actualizado
+            self.save_data(df)
         except Exception as e:
             raise RuntimeError(f"Error al agregar una nueva venta: {e}")
 
@@ -49,8 +48,10 @@ class ExcelHandler:
         :return: Diccionario con el resumen de ventas.
         """
         try:
-            df = self.load_data()  # Cargar los datos
-            summary = df.groupby("Producto")["Precio"].sum()
-            return summary.to_dict()  # Devolver el resumen como diccionario
+            df = self.load_data()
+            if "Producto" in df.columns:
+                df["Producto"] = df["Producto"].astype(str).str.lower()
+            summary = df.groupby("Producto")["precio total"].sum()
+            return summary
         except Exception as e:
             raise RuntimeError(f"Error al generar el resumen: {e}")
