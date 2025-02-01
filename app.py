@@ -11,11 +11,14 @@ excel_path = "src/data/" + EXCEL_FILE
 data = ExcelHandler(excel_path, SHEET_NAME)
 st.set_page_config(layout="wide")
 st.title("Gestión de Inventario y Ventas")
+# data_frame = data.load_data()
+# df_columns_upper = [col.upper() for col in data_frame.columns]
 col1, col2, col3, col4 = st.columns([6, 6, 6, 6])
 
 with col1:
     fecha = st.date_input("Fecha de venta", value=datetime.today())
     producto = st.selectbox("Producto", ["", "Sembra 2023", "Otro"])
+    accion = st.selectbox("Acción", ["", "Venta", "Etiquetado", "Embotellado", "Otro"])
 
 with col2:
     cantidad = st.number_input("Botellas vendidas", min_value=1, step=1)
@@ -31,22 +34,21 @@ with col4:
     st.markdown(f"**Precio total venta:** {precio_total:.2f} €")
 
 if st.button("Guardar venta"):
-    # Validar campos obligatorios
-    if not producto or not cliente or metodo_pago == "":
+    if not accion or not precio_venta or not producto or not cliente:
         st.error("Por favor, completa todos los campos obligatorios.")
     else:
-        # Crear un nuevo DataFrame con la venta registrada
-        new_sale = pd.DataFrame({
-            "Fecha": [fecha],
-            "acción": ["venta"],
-            "Producto": [producto],
-            "num bot": [cantidad],
-            "precio total": [precio_total],
-            "precio botella": [precio_total / cantidad if cantidad > 0 else 0],
-            "cliente": [cliente],
-            "observaciones": [observaciones],
-            "Método de pago": [metodo_pago]
-        })
+        new_sale = {
+            "Fecha": fecha,
+            "acción": accion,
+            "Producto": producto.lower(),
+            "num bot": cantidad,
+            "precio total": precio_total,
+            "precio botella": precio_total / cantidad if cantidad > 0 else 0,
+            "cliente": cliente,
+            "observaciones": observaciones,
+            "Método de pago": metodo_pago
+        }
+
         data.append_sale(new_sale, sheet_name=SHEET_NAME)
         st.success("Venta guardada correctamente")
 
