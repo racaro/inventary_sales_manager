@@ -58,7 +58,7 @@ class ExcelHandler:
         with pd.ExcelWriter(self.file_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
             data.to_excel(writer, sheet_name=sheet, index=False)
 
-    def append_sale(self, data, new_sale, sheet_name=None):
+    def append_sale(self, new_sale, sheet_name=None):
         """
         Agrega una nueva fila (venta) al archivo Excel.
         :param data: DataFrame con los datos actuales.

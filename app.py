@@ -72,7 +72,7 @@ if modal.is_open():
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("✅ Confirmar", key="confirmar"):
-                data.append_sale(data_frame, st.session_state["new_sale"], sheet_name=SHEET_NAME)
+                data.append_sale(st.session_state["new_sale"], sheet_name=SHEET_NAME)
                 st.success("Guardado correctamente")
                 modal.close()
                 st.session_state["data_updated"] = True
