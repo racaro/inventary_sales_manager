@@ -82,16 +82,60 @@ class ExcelHandler:
         except Exception as e:
             raise RuntimeError(f"Error al agregar una nueva venta: {e}")
 
-    def get_summary(self, data):
+    def get_summary_Producto(self, df):
         """
         Devuelve un resumen estadístico de las ventas por producto.
-        :param df: DataFrame con los datos de las ventas.
         :return: Diccionario con el resumen de ventas.
         """
         try:
+            data = df
             if "Producto" in data.columns:
                 data["Producto"] = data["Producto"].astype(str).str.lower()
             summary = data.groupby("Producto")["Precio total venta"].sum()
+            return summary
+        except Exception as e:
+            raise RuntimeError(f"Error al generar el resumen: {e}")
+        
+    def get_summary_TipoCliente_bar(self, df):
+        """
+        Devuelve un resumen estadístico de las ventas por producto.
+        :return: Diccionario con el resumen de ventas.
+        """
+        try:
+            data = df
+            if "Cliente" in data.columns:
+                data["Cliente"] = data["Cliente"].astype(str).str.lower()
+            summary = data.groupby("Cliente")["Botellas vendidas"].sum()
+            return summary
+        except Exception as e:
+            raise RuntimeError(f"Error al generar el resumen: {e}")
+    
+    def get_summary_TipoCliente_pie(self, df):
+        """
+        Devuelve un resumen estadístico de las ventas por producto.
+        :return: Diccionario con el resumen de ventas.
+        """
+        try:
+            data = df
+            if "Cliente" in data.columns:
+                data["Cliente"] = data["Cliente"].astype(str).str.lower()
+            summary = data.groupby("Cliente")["Botellas vendidas"].sum()
+            return summary
+        except Exception as e:
+            raise RuntimeError(f"Error al generar el resumen: {e}")
+        
+    def get_summary_TipoVenta_bar(self, df):
+        """
+        Devuelve un resumen estadístico de las ventas por producto.
+        :return: Diccionario con el resumen de ventas.
+        """
+        try:
+            data = df
+            if "Metodo de pago" in data.columns:
+            # Convertir a minúsculas y eliminar filas con NaN en "Metodo de pago"
+                data["Metodo de pago"] = data["Metodo de pago"].astype(str).str.lower()
+                data = data.dropna(subset=["Metodo de pago"])
+            summary = data.groupby("Metodo de pago")["Precio total venta"].sum()
             return summary
         except Exception as e:
             raise RuntimeError(f"Error al generar el resumen: {e}")
