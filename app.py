@@ -2,25 +2,25 @@ import streamlit as st
 from streamlit_modal import Modal
 import pandas as pd
 from datetime import datetime
-import plotly.express as px
 import plotly.graph_objects as go
 from src.utils.data_handler import ExcelHandler
-from src.utils import general_functions as gf
 
 SHEET_NAME = "Variables template"
 excel_path = "src/data/"
 stock_inicial = 1850
 data = ExcelHandler(excel_path, SHEET_NAME)
 st.set_page_config(layout="wide")
-st.title("Gestión de Inventario y Ventas")
+st.markdown(
+"<div style='text-align: center; font-size: 40px; font-weight: bold;'>GESTIÓN DE INVENTARIO Y VENTAS</div>",
+unsafe_allow_html=True
+)
 
-# 🔄 Cargar y limpiar datos
 def load_sales():
     return data.clean_data(data.load_data(sheet_name=SHEET_NAME))
 
 data_frame = load_sales()
-
-modal = Modal(key="confirm_modal", title="Confirmar datos de la venta")
+modal_append = Modal(key="confirm_modal", title="Confirmar datos de la venta")
+modal_remove = Modal(key="confirm_modal_remove", title="Confirmar datos de la venta a eliminar")
 
 with st.sidebar:
     if "fecha" not in st.session_state:
@@ -41,71 +41,95 @@ with st.sidebar:
         st.session_state["accion"] = ""
 
     fecha = st.date_input("Fecha de venta", value=datetime.now())
-    accion = st.selectbox("Acción", ["Venta", "Etiquetado", "Embotellado", "Otro"])
-    producto = st.selectbox("Producto", ["Sembra 2023"])
+    accion = st.selectbox("Acción", ["Seleccione", "Venta", "Otro"], index=0)
+    producto = st.selectbox("Producto", ["Seleccione", "Sembra 2023"], index=0)
     cantidad = st.number_input("Botellas vendidas", min_value=1, step=1)
     precio_total_venta = st.number_input("Precio total venta", min_value=0.0, step=0.1)
-    metodo_pago = st.selectbox("Método de pago", ["Bizum", "Efectivo", "Factura", "Otro"])
-    cliente = st.selectbox("Tipo de cliente", ["Muestra", "Distribución", "Horeca", "Amigos/Familia", "Público", "Otro"])
+    metodo_pago = st.selectbox("Método de pago", ["Seleccione", "Bizum", "Efectivo", "Factura", "Otro"], index=0)
+    cliente = st.selectbox("Tipo de cliente", ["Seleccione", "Muestra", "Distribución", "Horeca", "Amigos/Familia", "Público", "Otro"], index=0)
     observaciones = st.text_area("Observaciones")
 
-    if st.button("Guardar venta"):
-        if not accion or not producto or not cliente:
-            st.error("Completa todos los campos obligatorios.")
-        else:
-            st.session_state["new_sale"] = {
-                "Fecha de venta": fecha,
-                "Accion": accion,
-                "Producto": producto.lower(),
-                "Botellas vendidas": cantidad,
-                "Precio total venta": precio_total_venta,
-                "Precio botella": round(precio_total_venta / cantidad if cantidad > 0 else 0, 2),
-                "Cliente": cliente,
-                "Observaciones": observaciones,
-                "Metodo de pago": metodo_pago
-            }
-            modal.open()
+    left, right = st.columns(2)    
+    
+    with left:
+        if st.button("Guardar venta", key="guardar_venta", use_container_width=True):
+            if producto == "Seleccione" or metodo_pago == "Seleccione" or cliente == "Seleccione" or accion == "Seleccione":
+                st.error("Completa todos los campos obligatorios.")
+            else:
+                st.session_state["new_sale"] = {
+                    "Fecha de venta": fecha,
+                    "Accion": accion.upper(),
+                    "Producto": producto.upper(),
+                    "Botellas vendidas": cantidad,
+                    "Precio total venta": round(precio_total_venta, 2),
+                    "Precio botella": round(precio_total_venta / cantidad if cantidad > 0 else 0, 2),
+                    "Cliente": cliente.upper(),
+                    "Observaciones": observaciones,
+                    "Metodo de pago": metodo_pago.upper()
+                }
+                modal_append.open()
+    
+    number = st.selectbox("Seleccione la venta a eliminar", range(data_frame.shape[0]))
+    
+    with right:
+        if st.button("Eliminar venta", type="primary", key="eliminar_venta", use_container_width=True) and data_frame.shape[0] > 0:
+            modal_remove.open()
 
-if modal.is_open():
-    with modal.container():
+if modal_append.is_open():
+    with modal_append.container():
         st.write("<h3 style='text-align:center;'>¿Los siguientes datos son correctos?</h3>", unsafe_allow_html=True)
         st.table(pd.DataFrame([st.session_state["new_sale"]]))
-
-        col1, col2, col3 = st.columns(3)
+        col1, _, col3 = st.columns(3)
         with col1:
             if st.button("✅ Confirmar", key="confirmar"):
                 data.append_sale(st.session_state["new_sale"], sheet_name=SHEET_NAME)
                 st.success("Guardado correctamente")
-                modal.close()
+                modal_append.close()
                 st.session_state["data_updated"] = True
                 st.session_state["fecha"] = datetime.now()
-                st.session_state["producto"] = ""
+                st.session_state["producto"] = "Seleccionar"
                 st.session_state["cantidad"] = 1
                 st.session_state["precio_total_venta"] = 0.0
-                st.session_state["metodo_pago"] = ""
-                st.session_state["cliente"] = ""
+                st.session_state["metodo_pago"] = "Seleccionar"
+                st.session_state["cliente"] = "Seleccionar"
                 st.session_state["observaciones"] = ""
-                st.session_state["accion"] = ""
+                st.session_state["accion"] = "Seleccionar"
                 st.experimental_rerun()
 
         with col3:
             if st.button("❌ Cancelar", key="cancelar"):
                 st.warning("Cancelado.")
-                modal.close()
+                modal_append.close()
+    
+if modal_remove.is_open():
+    with modal_remove.container():
+        st.write("<h3 style='text-align:center;'>¿Los siguientes datos son correctos?</h3>", unsafe_allow_html=True)
+        st.table(data_frame.iloc[[number]])
+        col1, _, col3 = st.columns(3)
+        with col1:
+            if st.button("✅ Confirmar", key="confirmar"):
+                data.remove_sale(number)
+                st.success("Eliminado correctamente")
+                modal_remove.close()
+                st.session_state["data_updated"] = True
+                st.experimental_rerun()
+
+        with col3:
+            if st.button("❌ Cancelar", key="cancelar"):
+                st.warning("Cancelado.")
+                modal_remove.close()
 
 if "data_updated" in st.session_state and st.session_state["data_updated"]:
     data_frame = load_sales()
     st.session_state["data_updated"] = False
 
 if len(data_frame):
-    # Realizar cálculos adicionales
     botellas_consumidas = sum(data_frame['Botellas vendidas'])
     stock_actual = stock_inicial - botellas_consumidas
     ventas_totales = round(sum(data_frame['Precio total venta']), 2)
     precio_medio = round(ventas_totales / sum(data_frame['Botellas vendidas']), 2)
 
-    # Visualización de cálculos
-    st.subheader("Visualización de Cálculos")
+    st.subheader("Visualización de cálculos")
     st.markdown(f"""
         <style>
         .box-container {{
@@ -151,33 +175,30 @@ if len(data_frame):
 
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([1, 1, 1], gap="large")
+col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
-    st.subheader("Resumen de Ventas por tipo de Cliente")
-    summary_cliente_bar = data.get_summary_TipoCliente_bar(data_frame)
-    st.write(summary_cliente_bar)
-    fig_bar = go.Figure(data=[go.Bar(x=summary_cliente_bar.index, y=summary_cliente_bar.values, marker_color='#DA70D6')])  # Lila pastel
-    fig_bar.update_layout(title_text="Ventas por Cliente", xaxis_title="Cliente", yaxis_title="Botellas vendidas")
+    st.subheader("Resumen de ventas por cliente", divider=True)
+    summary_cliente_bar = data.get_summary(data_frame, "Cliente", "Botellas vendidas")
+    fig_bar = go.Figure(data=[go.Bar(x=summary_cliente_bar.index, y=summary_cliente_bar.values, marker_color='#DA70D6')])
+    fig_bar.update_layout(title_text="Evolución de ventas por cliente", xaxis_title="Cliente", yaxis_title="Botellas vendidas")
     st.plotly_chart(fig_bar)
-
-with col2:
-    st.subheader("Resumen de Ventas por tipo de Cliente")
-    summary_cliente_pie = data.get_summary_TipoCliente_pie(data_frame)
+    summary_cliente_pie = data.get_summary(data_frame, "Cliente", "Botellas vendidas")
     fig_pie = go.Figure(data=[go.Pie(labels=summary_cliente_pie.index, values=summary_cliente_pie.values, hole=.3,
-                                     marker=dict(colors=['#FFC0CB', '#DDA0DD', '#E6E6FA', '#C71585']))])  # Granate, morado, lila pastel
-    fig_pie.update_layout(title_text="Ventas por Cliente")
+                                     marker=dict(colors=['#FFC0CB', '#DDA0DD', '#E6E6FA', '#C71585']))])
     st.plotly_chart(fig_pie)
 
-with col3:
-    st.subheader("Resumen de Ventas por tipo de Venta")
-    summary_venta_bar = data.get_summary_TipoVenta_bar(data_frame)
-    st.write(summary_venta_bar)
-    fig_venta_bar = go.Figure(data=[go.Bar(x=summary_venta_bar.index, y=summary_venta_bar.values, marker_color='#9370DB')])  # Morado pastel
-    fig_venta_bar.update_layout(title_text="Ventas por Método de Pago", xaxis_title="Método de Pago", yaxis_title="Precio Total Venta")
+with col2:
+    st.subheader("Resumen de ventas por tipo de venta", divider=True)
+    summary_venta_bar = data.get_summary(data_frame, "Metodo de pago", "Precio total venta")
+    fig_venta_bar = go.Figure(data=[go.Bar(x=summary_venta_bar.index, y=summary_venta_bar.values, marker_color='#9370DB')])
+    fig_venta_bar.update_layout(title_text="Evolución de ventas por método de pago", xaxis_title="Método de pago", yaxis_title="Precio total venta")
     st.plotly_chart(fig_venta_bar)
+    _, col2, _ = st.columns([1, 4, 1])
+    with col2: 
+        st.write(summary_venta_bar)
     
 st.markdown("<br><br>", unsafe_allow_html=True) 
    
-with st.expander("Historial de Ventas"):
+with st.expander("Historial de ventas"):
     st.dataframe(data_frame, use_container_width=True)

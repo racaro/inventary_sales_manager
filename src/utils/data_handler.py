@@ -68,74 +68,40 @@ class ExcelHandler:
         sheet = sheet_name if sheet_name else self.sheet_name
         try:
             df = self.load_data(sheet)
-
-            # Si el archivo estaba vacío, crea un DataFrame con las columnas correctas
             if df.empty:
                 df = pd.DataFrame(columns=new_sale.keys())
-
-            # Agregar la nueva venta
             df = pd.concat([df, pd.DataFrame([new_sale])], ignore_index=True)
-
-            # Guardar los cambios en el archivo Excel
             self.save_data(df, sheet)
 
         except Exception as e:
             raise RuntimeError(f"Error al agregar una nueva venta: {e}")
-
-    def get_summary_Producto(self, df):
-        """
-        Devuelve un resumen estadístico de las ventas por producto.
-        :return: Diccionario con el resumen de ventas.
-        """
-        try:
-            data = df
-            if "Producto" in data.columns:
-                data["Producto"] = data["Producto"].astype(str).str.lower()
-            summary = data.groupby("Producto")["Precio total venta"].sum()
-            return summary
-        except Exception as e:
-            raise RuntimeError(f"Error al generar el resumen: {e}")
-        
-    def get_summary_TipoCliente_bar(self, df):
-        """
-        Devuelve un resumen estadístico de las ventas por producto.
-        :return: Diccionario con el resumen de ventas.
-        """
-        try:
-            data = df
-            if "Cliente" in data.columns:
-                data["Cliente"] = data["Cliente"].astype(str).str.lower()
-            summary = data.groupby("Cliente")["Botellas vendidas"].sum()
-            return summary
-        except Exception as e:
-            raise RuntimeError(f"Error al generar el resumen: {e}")
     
-    def get_summary_TipoCliente_pie(self, df):
+    def remove_sale(self, index, sheet_name=None):
+        """
+        Elimina una venta específica del archivo Excel.
+        :param index: Indice de la venta a eliminar.
+        :param sheet_name: Nombre de la hoja donde se eliminarán las ventas.
+        :return: DataFrame con los datos actualizados.
+        """
+        sheet = sheet_name if sheet_name else self.sheet_name
+        try:
+            df = self.load_data(sheet)
+            df = df.drop(index)
+            self.save_data(df, sheet)
+        except Exception as e:
+            raise RuntimeError(f"Error al eliminar una venta: {e}")
+
+    def get_summary(self, df, var1, var2):
         """
         Devuelve un resumen estadístico de las ventas por producto.
         :return: Diccionario con el resumen de ventas.
         """
         try:
             data = df
-            if "Cliente" in data.columns:
-                data["Cliente"] = data["Cliente"].astype(str).str.lower()
-            summary = data.groupby("Cliente")["Botellas vendidas"].sum()
+            if var1 in data.columns:
+                data[var1] = data[var1].astype(str).str.upper()
+            summary = data.groupby(var1)[var2].sum()
             return summary
         except Exception as e:
             raise RuntimeError(f"Error al generar el resumen: {e}")
         
-    def get_summary_TipoVenta_bar(self, df):
-        """
-        Devuelve un resumen estadístico de las ventas por producto.
-        :return: Diccionario con el resumen de ventas.
-        """
-        try:
-            data = df
-            if "Metodo de pago" in data.columns:
-            # Convertir a minúsculas y eliminar filas con NaN en "Metodo de pago"
-                data["Metodo de pago"] = data["Metodo de pago"].astype(str).str.lower()
-                data = data.dropna(subset=["Metodo de pago"])
-            summary = data.groupby("Metodo de pago")["Precio total venta"].sum()
-            return summary
-        except Exception as e:
-            raise RuntimeError(f"Error al generar el resumen: {e}")
