@@ -42,7 +42,7 @@ inventary_sales_manager/
 
 1. Clone or download this repository:
    ```
-   git clone https://github.com/yourusername/inventary_sales_manager.git
+   git clone https://github.com/racaro/inventary_sales_manager.git
    cd inventary_sales_manager
    ```
 
