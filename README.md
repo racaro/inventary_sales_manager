@@ -52,11 +52,11 @@ inventary_sales_manager/
    ```
 
 3. Activate the virtual environment:
-   - Windows: 
+   - Windows:
      ```
      venv\Scripts\activate
      ```
-   - macOS/Linux: 
+   - macOS/Linux:
      ```
      source venv/bin/activate
      ```
@@ -72,29 +72,50 @@ The application uses an Excel file to store data:
 - By default, it looks for a file called `sales_data.xlsx` in the application directory
 - If the file doesn't exist, it will automatically create a new one with the required structure
 - No need to manually create any template file - the application handles this for you
-- All data modifications are automatically backed up in a `backups` folder
+- All data modifications are automatically backed up in a `backups` folder (created in the application directory)
+  - Each backup file is named with a timestamp (e.g., `sales_data_backup_20240601_153045.xlsx`)
+  - This provides data recovery options in case of accidental changes or data corruption
 
 ### Running the Application
 
 ### Method 1: Direct Python Execution
 1. Open your command prompt or terminal
-2. Navigate to the project directory:
-   ```
-   cd c:\Users\Usuario\Documents\racaro\inventary_sales_manager
-   ```
-3. Run the application:
+2. Run the application directly with Python:
    ```
    python main.py
    ```
 
-### Method 2: Creating an Executable
+### Method 2: Using Run Scripts
+1. For Windows users:
+   ```
+   cd scripts
+   run_app.bat
+   ```
+
+   For macOS/Linux users:
+   ```
+   cd scripts
+   chmod +x run_app.sh  # Make the script executable (only needed once)
+   ./run_app.sh
+   ```
+
+   These scripts automatically handle the Python execution with the correct environment.
+
+### Method 3: Creating an Executable
 1. Make sure PyInstaller is installed:
    ```
    pip install pyinstaller
    ```
 2. Create the executable:
    ```
-   pyinstaller --onefile --windowed --icon=app_icon.ico main.py
+   # For Windows
+   pyinstaller --onefile --windowed --icon=resources/app_icon.ico main.py
+
+   # For macOS
+   pyinstaller --onefile --windowed --icon=resources/app_icon.icns main.py
+
+   # For Linux
+   pyinstaller --onefile --windowed main.py
    ```
 3. Find the executable in the 'dist' folder
 4. Double-click the executable to run the application
@@ -157,11 +178,19 @@ ruff check --fix .
 
 ## License
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. 
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
 See https://creativecommons.org/licenses/by-nc/4.0/ for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## Support
 
-For support, contact raulcarrasco9797@gmail.com.
-
-
+If you encounter any issues or have questions about this project, please open an issue on the GitHub repository or contact the maintainers.
