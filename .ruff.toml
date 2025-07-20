@@ -1,0 +1,35 @@
+# Enable flake8-bugbear rules.
+select = ["E", "F", "B", "I"]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".git",
+    ".ruff_cache",
+    "__pypackages__",
+    "build",
+    "dist",
+    "venv",
+]
+
+# Same as Black.
+line-length = 100
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Updated to Python 3.11
+target-version = "py311"
+
+# Ignore specific rules for this project
+ignore = ["E203", "E501"]
+
+[per-file-ignores]
+"__init__.py" = ["F401"]
+
+[mccabe]
+# Set the maximum allowed McCabe complexity value for a block of code.
+max-complexity = 10
+
+[isort]
+# Updated known-first-party to reflect the new structure
+known-first-party = ["src"]
