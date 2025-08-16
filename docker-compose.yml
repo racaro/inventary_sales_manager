@@ -1,0 +1,19 @@
+services:
+  stock-manager:
+    build: .
+    container_name: stock-manager-app
+    ports:
+      - "5901:5900"  # VNC port
+    volumes:
+      - ./data:/app/data  # Persist data files
+      - ./backups:/app/backups  # Persist backups
+    environment:
+      - DISPLAY=:99
+      - QT_X11_NO_MITSHM=1
+    restart: unless-stopped
+    networks:
+      - stock-manager-net
+
+networks:
+  stock-manager-net:
+    driver: bridge

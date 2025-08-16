@@ -10,8 +10,8 @@ from src.gui.stock_manager import StockManager
 
 # Configure logging
 logging.basicConfig(
-    filename="stock_manager.log", 
-    level=logging.ERROR, 
+    filename="stock_manager.log",
+    level=logging.ERROR,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
@@ -25,15 +25,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# To run this application:
-# 1. Open your command prompt or terminal
-# 2. Navigate to the project directory:
-#    cd c:\Users\Usuario\Documents\racaro\inventary_sales_manager
-# 3. Run the application:
-#    python main.py
-#
-# To create an executable:
-# 1. Install pyinstaller: pip install pyinstaller
-# 2. Run: pyinstaller --onefile --windowed --icon=app_icon.ico main.py
-# 3. The executable will be created in the 'dist' folder

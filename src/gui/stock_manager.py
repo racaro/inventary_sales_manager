@@ -1,8 +1,7 @@
 import sys
 import os
-import logging
 from PySide6.QtWidgets import (
-    QMainWindow, QMessageBox, QTabWidget, QStatusBar, QMenu
+    QMainWindow, QMessageBox, QTabWidget, QMenu
 )
 from PySide6.QtGui import QAction
 
@@ -29,7 +28,7 @@ class StockManager(QMainWindow):
         # Initialize data handler
         self.handler = ExcelHandler(base_path)
         self.file_path = self.handler.file_path
-        
+
         # Load data
         self.data = self.handler.load_data()
 
@@ -49,22 +48,22 @@ class StockManager(QMainWindow):
     def setup_ui(self):
         """Set up the main UI components"""
         self.tabs = QTabWidget()
-        
+
         # Create tabs
         self.sales_tab = SalesTableTab(self.data, self.handler, self.update_summary_tab)
         self.new_sale_tab = NewSaleTab(self.data, self.handler, self.update_summary_tab)
         self.summary_tab = SummaryTab(
-            self.data, 
+            self.data,
             self.gastos_historial,
             self.save_gastos_historial,
             self.file_path
         )
-        
+
         # Add tabs to the tab widget
         self.tabs.addTab(self.sales_tab, "Ventas")
         self.tabs.addTab(self.new_sale_tab, "Nueva venta")
         self.tabs.addTab(self.summary_tab, "Resumen")
-        
+
         # Set as central widget
         self.setCentralWidget(self.tabs)
 
