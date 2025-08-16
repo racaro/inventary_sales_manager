@@ -120,6 +120,64 @@ The application uses an Excel file to store data:
 3. Find the executable in the 'dist' folder
 4. Double-click the executable to run the application
 
+### Method 4: Running with Docker
+
+Docker provides a containerized environment that ensures the application runs consistently across different systems.
+
+#### Prerequisites
+- Docker Desktop installed on your system
+- VNC viewer software (RealVNC Viewer, TightVNC, or UltraVNC)
+
+#### Quick Start with Docker
+1. For Windows users, run the automated script:
+   ```cmd
+   docker-start.bat
+   ```
+
+   For macOS/Linux users:
+   ```bash
+   chmod +x docker-start.sh
+   ./docker-start.sh
+   ```
+
+#### Manual Docker Commands
+```bash
+# Build and start the container
+docker-compose up -d
+
+# View logs
+docker-compose logs -f stock-manager
+
+# Stop the container
+docker-compose down
+
+# Rebuild the image (if you made changes)
+docker-compose build --no-cache
+```
+
+#### Accessing the GUI with Docker
+1. Install a VNC viewer:
+   - **RealVNC Viewer** (recommended): https://www.realvnc.com/en/connect/download/viewer/
+   - **TightVNC Viewer**: https://www.tightvnc.com/download.php
+   - **UltraVNC**: https://uvnc.com/downloads/
+
+2. Connect to the application:
+   - Open your VNC viewer
+   - Connect to `localhost:5901`
+   - No password required
+   - The Stock Manager application will appear in the VNC window
+
+#### Docker Benefits
+- **Portability**: Runs identically on any system with Docker
+- **Isolation**: No need to install Python or dependencies on your host system
+- **Consistency**: Same environment for development and distribution
+- **Easy Distribution**: Users only need Docker and a VNC viewer
+
+#### Data Persistence with Docker
+- Your sales data is automatically saved to `./data/sales_data.xlsx` on your host system
+- Backups are stored in `./backups/` directory
+- Data persists even when the container is stopped or recreated
+
 ## Testing the Application
 
 When first launched, the application will:
@@ -194,3 +252,27 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 If you encounter any issues or have questions about this project, please open an issue on the GitHub repository or contact the maintainers.
+
+## Docker Troubleshooting
+
+### Common Issues
+- **Port already in use**: If port 5901 is busy, change it in `docker-compose.yml`
+- **VNC connection fails**: Ensure Docker container is running with `docker-compose ps`
+- **Application doesn't start**: Check logs with `docker-compose logs -f stock-manager`
+
+### Useful Docker Commands
+```bash
+# Check container status
+docker-compose ps
+
+# View real-time logs
+docker-compose logs -f stock-manager
+
+# Restart the application
+docker-compose restart
+
+# Clean rebuild (if having issues)
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+```

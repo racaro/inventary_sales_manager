@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 from PySide6.QtWidgets import (
-    QWidget, QFormLayout, QDateEdit, QComboBox, QSpinBox, 
+    QWidget, QFormLayout, QDateEdit, QComboBox, QSpinBox,
     QDoubleSpinBox, QTextEdit, QPushButton, QMessageBox
 )
 from PySide6.QtCore import QDate
@@ -31,7 +31,7 @@ class NewSaleTab(QWidget):
 
         # Product input
         self.producto_input = QComboBox()
-        self.producto_input.addItems(["Seleccione", "Sembra 2023", "Otro"])
+        self.producto_input.addItems(["Seleccione", "Producto1", "Producto2", "Producto3"])
         form_layout.addRow("Producto:", self.producto_input)
 
         # Quantity input
