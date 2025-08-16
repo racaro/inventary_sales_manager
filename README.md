@@ -194,7 +194,7 @@ To test the application functionality:
 2. Fill in the required fields:
    - Select a date
    - Choose "Venta" as the action type
-   - Select a product (e.g., "Sembra 2023")
+   - Select a product (e.g., "Producto1")
    - Enter the quantity sold
    - Enter the price per bottle
    - Select a client type
