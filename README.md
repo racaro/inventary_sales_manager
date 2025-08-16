@@ -15,8 +15,12 @@ Stock Manager is a desktop application for managing sales and inventory. The app
 inventary_sales_manager/
 ├── main.py                  # Main entry point
 ├── requirements.txt         # Project dependencies
+├── CHANGELOG.md             # changelog version file
 ├── README.md                # This file
-├── Template.xlsx            # Data storage template
+├── Dockerfile               # Docker file
+├── docker-compose.yml       # Docker compose
+├── .dockerignore            # Docker ignore file
+├── .gitattributes           # Git attributes
 ├── .pre-commit-config.yaml  # Pre-commit hooks configuration
 ├── gui/                     # GUI components
 │   ├── __init__.py
