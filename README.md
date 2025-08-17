@@ -23,17 +23,24 @@ inventary_sales_manager/
 ├── .dockerignore            # Docker ignore file
 ├── .gitattributes           # Git attributes
 ├── .pre-commit-config.yaml  # Pre-commit hooks configuration
-├── gui/                     # GUI components
-│   ├── __init__.py
-│   ├── stock_manager.py     # Main application window
-│   └── tabs/                # UI tabs
+├── src/
+│   ├── gui/                 # GUI components
+│   │   ├── __init__.py
+│   │   ├── stock_manager.py # Main application window
+│   │   └── tabs/            # UI tabs
+│   │       ├── __init__.py
+│   │       ├── sales_tab.py     # Wine sales data display tab
+│   │       ├── new_sale_tab.py  # New wine sale input tab
+│   │       └── summary_tab.py   # Wine sales summary and charts tab
+│   └── utils/               # Utility modules
 │       ├── __init__.py
-│       ├── sales_tab.py     # Sales data display tab
-│       ├── new_sale_tab.py  # New sale input tab
-│       └── summary_tab.py   # Data summary and charts tab
-└── utils/                   # Utility modules
-    ├── __init__.py
-    └── data_handler.py      # Excel data handling
+│       ├── data_handler.py  # Excel data handling
+│       └── config_manager.py # Configuration management
+└── scripts/                 # Build and deployment scripts
+    ├── run_app.bat         # Windows run script
+    ├── run_app.sh          # Linux/Mac run script
+    ├── build_exe.bat       # Windows executable build script
+    └── docker-start.bat    # Docker startup script
 ```
 
 ## Setup Instructions
@@ -105,33 +112,44 @@ The application uses an Excel file to store wine sales data:
    ./run_app.sh
    ```
 
-   These scripts automatically handle the Python execution with the correct environment.
+### Method 3: Creating an Executable for Wine Business
 
-### Method 3: Creating an Executable
+#### Prerequisites for Executable Creation
 1. Make sure PyInstaller is installed:
    ```
    pip install pyinstaller
    ```
-2. Create the executable:
-   ```
-   # For Windows
-   pyinstaller --onefile --windowed main.py
 
-   # For macOS
-   pyinstaller --onefile --windowed main.py
+#### Build Commands
 
-   # For Linux
-   pyinstaller --onefile --windowed main.py
-   ```
-3. Find the executable in the 'dist' folder
-4. Double-click the executable to run the wine sales manager
-
-**Option used: Complete Build**
+**Option 1: Complete Build (Recommended for Distribution)**
 ```bash
 pyinstaller --onefile --windowed --name "Sembra2023-SalesManager" --add-data "data;data" --add-data "backups;backups" --hidden-import=openpyxl --hidden-import=matplotlib --hidden-import=pandas --hidden-import=PySide6 main.py
 ```
 
-### Method 4: Running with Docker
+**Option 2: Simple Build (Basic executable)**
+```bash
+pyinstaller --onefile --windowed --name "Sembra2023-SalesManager" main.py
+```
+
+**Option 3: Optimized Build (Smaller file size)**
+```bash
+pyinstaller --onefile --windowed --name "Sembra2023-SalesManager" --exclude-module tkinter --exclude-module PIL --hidden-import=openpyxl --hidden-import=matplotlib --hidden-import=pandas main.py
+```
+
+#### Using the Build Script (Windows)
+For convenience, you can use the automated build script:
+```batch
+scripts\build_exe.bat
+```
+
+#### After Building
+1. The executable will be created in the `dist/` folder
+2. The file will be named `Sembra2023-SalesManager.exe` (Windows)
+3. You can distribute this single file to wine business users
+4. Users don't need Python installed - just double-click to run
+
+### Method 4: Running with Docker (Build from Source)
 
 Docker provides a professional containerized environment for consistent wine sales management across different systems.
 
@@ -147,17 +165,17 @@ scripts\docker-start.bat
 
    For macOS/Linux users:
    ```bash
-   chmod +x docker-start.sh
-   ./docker-start.sh
+   chmod +x scripts/docker-start.sh
+   ./scripts/docker-start.sh
    ```
 
 #### Manual Docker Commands
 ```bash
-# Build and start the container
+# Build and start the wine sales manager container
 docker-compose up -d
 
-# View logs
-docker-compose logs -f stock-manager
+# View application logs
+docker-compose logs -f sembra-sales-manager
 
 # Stop the container
 docker-compose down
@@ -166,58 +184,154 @@ docker-compose down
 docker-compose build --no-cache
 ```
 
-#### Accessing the GUI with Docker
+### Method 5: Using Pre-built Docker Image (Recommended)
+
+The easiest way to run Sembra 2023 Wine Sales Manager is using our pre-built Docker image from Docker Hub.
+
+#### Quick Start with Pre-built Image
+
+```bash
+# Pull the latest version
+docker pull racaro/sembra2023-sales-manager:v1.0.0-Sembra2023
+
+# Run the wine sales manager
+docker run -d \
+  --name sembra-sales \
+  -p 5901:5901 \
+  -v ./data:/app/data \
+  -v ./backups:/app/backups \
+  racaro/sembra2023-sales-manager:v1.0.0-Sembra2023
+
+# Connect with VNC viewer to localhost:5901
+```
+
+#### Docker Compose with Pre-built Image
+
+Create a `docker-compose-prebuilt.yml` file:
+
+```yaml
+version: '3.8'
+
+services:
+  sembra-sales:
+    image: racaro/sembra2023-sales-manager:v1.0.0-Sembra2023
+    container_name: sembra2023-sales-manager
+    ports:
+      - "5901:5901"  # VNC port
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+      - ./config:/app/config
+    environment:
+      - DISPLAY=:1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "python3 main.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+Then run:
+```bash
+docker-compose -f docker-compose-prebuilt.yml up -d
+```
+
+#### Alternative Tags Available
+
+```bash
+# Latest version (same as v1.0.0-Sembra2023)
+docker pull racaro/sembra2023-sales-manager:latest
+
+# Specific version for wine business
+docker pull racaro/sembra2023-sales-manager:v1.0.0-Sembra2023
+```
+
+#### Wine Business Benefits of Pre-built Image
+- **🚀 Instant Setup**: No build time required
+- **📦 Professional Distribution**: Ready for wine business use
+- **🔄 Automatic Updates**: Easy to pull new versions
+- **🍷 Sembra 2023 Optimized**: Pre-configured for wine sales
+- **💾 Smaller Download**: Optimized image size
+
+#### Accessing the Wine Sales Manager GUI
 1. Install a VNC viewer:
    - **RealVNC Viewer** (recommended): https://www.realvnc.com/en/connect/download/viewer/
    - **TightVNC Viewer**: https://www.tightvnc.com/download.php
-   - **UltraVNC**: https://uvnc.com/downloads/
 
-2. Connect to the application:
+2. Connect to the wine sales application:
    - Open your VNC viewer
    - Connect to `localhost:5901`
    - No password required
-   - The Stock Manager application will appear in the VNC window
+   - The Sembra 2023 Wine Sales Manager will appear in the VNC window
 
-#### Docker Benefits
-- **Portability**: Runs identically on any system with Docker
-- **Isolation**: No need to install Python or dependencies on your host system
-- **Consistency**: Same environment for development and distribution
-- **Easy Distribution**: Users only need Docker and a VNC viewer
+## Wine Sales Business Features
 
-#### Data Persistence with Docker
-- Your sales data is automatically saved to `./data/sales_data.xlsx` on your host system
-- Backups are stored in `./backups/` directory
-- Data persists even when the container is stopped or recreated
+### Wine Product Management
+The application is specifically designed for wine sales with support for:
+- **Sembra 2023**: Main wine product for tracking
+- **Otro**: Additional/custom wine products
 
-## Testing the Application
+### Client Type Categories for Wine Business
+- **Muestra**: Wine tasting samples and promotional bottles
+- **Distribución**: Wholesale distribution to retailers
+- **Horeca**: Hotels, Restaurants, and Cafés
+- **Amigos/Familia**: Friends and family sales
+- **Público**: Direct public sales
+- **Otro**: Special client categories
 
-When first launched, the application will:
-1. Create a new sales_data.xlsx file if it doesn't exist
-2. Display an empty sales table
-3. Allow you to add new sales data through the "Nueva venta" tab
+### Wine Sales Analytics
+- **Stock Management**: Track remaining wine inventory (default: 1850 bottles)
+- **Sales by Client**: Analyze which distribution channels perform best
+- **Profit Analysis**: Calculate margins after expenses (production, marketing, distribution)
+- **Payment Tracking**: Monitor cash flow with different payment methods
 
-To test the application functionality:
+## Testing the Wine Sales Application
+
+When first launched for your wine business:
+1. The application creates a new wine sales database
+2. Initial stock is set to 1850 bottles (configurable via JSON)
+3. Add wine sales through the "Nueva venta" tab
+
+### Adding Your First Wine Sale:
 1. Go to the "Nueva venta" tab
-2. Fill in the required fields:
-   - Select a date
-   - Choose "Venta" as the action type
-   - Select a product (e.g., "Producto1")
-   - Enter the quantity sold
-   - Enter the price per bottle
-   - Select a client type
-   - Select a payment method
-   - Add any observations (optional)
-3. Click "Añadir Venta" to add the sale
-4. Go to the "Ventas" tab to see the sale in the table
-5. Go to the "Resumen" tab to see charts and statistics
+2. Fill in the wine sale details:
+   - **Fecha de venta**: Sale date
+   - **Acción**: Select "Venta"
+   - **Producto**: Choose "Sembra 2023" or "Otro"
+   - **Cantidad**: Number of bottles sold
+   - **Precio unitario**: Price per bottle
+   - **Cliente**: Type of client (Horeca, Distribución, Público, etc.)
+   - **Método de pago**: Payment method (Bizum, Efectivo, Factura)
+   - **Observaciones**: Notes about the sale
+3. Click "Añadir Venta" to record the wine sale
+4. View all sales in the "Ventas" tab
+5. Analyze wine business performance in the "Resumen" tab
 
-The application automatically creates backups before saving any changes to your data file.
+### Wine Business Analytics Dashboard
+The "Resumen" tab provides:
+- **Stock Restante**: Real-time wine inventory levels
+- **Ventas por Cliente**: Performance by distribution channel
+- **Ventas por Producto**: Which wines sell best
+- **Ganancias**: Profit analysis with expense tracking
+
+## Wine Business Configuration
+
+### Stock Management
+Initial stock is managed via `data/config.json`:
+```json
+{
+  "initial_stock": {
+    "Sembra 2023": 1850,
+    "Otro": 0
+  }
+}
+```
 
 ## Development Setup
 
-### Code Quality Tools
-
-This project uses pre-commit hooks to maintain code quality. To set up:
+### Code Quality Tools for Wine Sales Application
 
 1. Install development dependencies:
    ```
@@ -229,61 +343,61 @@ This project uses pre-commit hooks to maintain code quality. To set up:
    pre-commit install
    ```
 
-3. The hooks will run automatically when you commit changes.
-
-### Manual Code Linting
-
-You can run Ruff manually to check code quality:
-
-```
-ruff check .
-```
-
-Or to auto-fix issues:
-
-```
-ruff check --fix .
-```
+3. Run code quality checks:
+   ```
+   ruff check .
+   ```
 
 ## License
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
-See https://creativecommons.org/licenses/by-nc/4.0/ for details.
+This wine sales management application is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
+Perfect for wine business use. See https://creativecommons.org/licenses/by-nc/4.0/ for details.
 
-## Contributing
+## Support for Wine Business
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+For questions about using this wine sales manager for your Sembra 2023 business:
+- Open an issue on the GitHub repository
+- Contact: raulcarrasco9797@gmail.com
+- Docker Hub: https://hub.docker.com/r/racaro/sembra2023-sales-manager
+- Specialized support for wine distribution business needs
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## Wine Business Docker Troubleshooting
 
-## Support
+### Common Issues for Wine Sales Management
+- **Port conflicts**: Change port 5901 in docker-compose files if needed
+- **VNC connection issues**: Ensure container is running with `docker ps`
+- **Wine sales data not saving**: Check permissions on `data` and `backups` folders
 
-If you encounter any issues or have questions about this project, please open an issue on the GitHub repository or contact the maintainers.
-
-## Docker Troubleshooting
-
-### Common Issues
-- **Port already in use**: If port 5901 is busy, change it in `docker-compose.yml`
-- **VNC connection fails**: Ensure Docker container is running with `docker-compose ps`
-- **Application doesn't start**: Check logs with `docker-compose logs -f stock-manager`
-
-### Useful Docker Commands
+### Wine Business Docker Commands
 ```bash
-# Check container status
-docker-compose ps
+# Check wine sales manager status
+docker ps | grep sembra
 
-# View real-time logs
-docker-compose logs -f stock-manager
+# View wine sales application logs
+docker logs sembra2023-sales-manager
 
-# Restart the application
-docker-compose restart
+# Restart wine sales manager
+docker restart sembra2023-sales-manager
 
-# Clean rebuild (if having issues)
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
+# Update to latest version
+docker pull racaro/sembra2023-sales-manager:latest
+docker stop sembra2023-sales-manager
+docker rm sembra2023-sales-manager
+docker run -d --name sembra2023-sales-manager -p 5901:5901 -v ./data:/app/data racaro/sembra2023-sales-manager:latest
 ```
+
+## Wine Business Data Backup
+
+Your wine sales data is automatically protected:
+- **Local backups**: Created before each significant change
+- **Docker persistence**: Data survives container restarts
+- **Excel format**: Easy to import/export for accounting software
+- **Timestamp tracking**: Full audit trail of wine sales modifications
+
+---
+
+**🍷 Developed specifically for Sembra 2023 wine business management**
+
+*Professional wine sales tracking and inventory management solution*
+
+**📦 Docker Hub**: https://hub.docker.com/r/racaro/sembra2023-sales-manager
