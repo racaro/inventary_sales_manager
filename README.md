@@ -126,7 +126,12 @@ The application uses an Excel file to store wine sales data:
 3. Find the executable in the 'dist' folder
 4. Double-click the executable to run the wine sales manager
 
-### Method 4: Running with Docker (Recommended for Business Use)
+**Option used: Complete Build**
+```bash
+pyinstaller --onefile --windowed --name "Sembra2023-SalesManager" --add-data "data;data" --add-data "backups;backups" --hidden-import=openpyxl --hidden-import=matplotlib --hidden-import=pandas --hidden-import=PySide6 main.py
+```
+
+### Method 4: Running with Docker
 
 Docker provides a professional containerized environment for consistent wine sales management across different systems.
 
