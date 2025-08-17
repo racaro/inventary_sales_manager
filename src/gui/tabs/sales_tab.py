@@ -91,7 +91,7 @@ class SalesTableTab(QWidget):
                             if isinstance(value, str) and value.strip():
                                 date = QDate.fromString(value, "yyyy-MM-dd")
                             else:
-                                date = QDate.currentDate()  # Use current date as default
+                                date = QDate.currentDate()
 
                             date_edit = QDateEdit()
                             date_edit.setCalendarPopup(True)
