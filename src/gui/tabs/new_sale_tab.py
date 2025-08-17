@@ -7,11 +7,12 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QDate
 
 class NewSaleTab(QWidget):
-    def __init__(self, data, handler, update_callback):
+    def __init__(self, data, handler, update_callback, manager=None):
         super().__init__()
         self.data = data
         self.handler = handler
         self.update_callback = update_callback
+        self.manager = manager  # Referencia al StockManager
         self.init_ui()
 
     def init_ui(self):
@@ -102,13 +103,13 @@ class NewSaleTab(QWidget):
                 "Metodo de pago": self.payment_method_input.currentText()
             }
 
-            for col in new_row:
-                if col not in self.data.columns:
-                    self.data[col] = pd.NA
+            new_data = pd.concat([self.data, pd.DataFrame([new_row])], ignore_index=True)
+            if self.manager:
+                self.manager.save_sale_data(new_data)
+            else:
+                self.handler.save_data_no_backup(new_data)
 
-            # Concatenate without warning
-            self.data = pd.concat([self.data, pd.DataFrame([new_row])], ignore_index=True)
-            self.handler.save_data(self.data)
+            self.data = new_data
 
             # Reset form fields
             self.action_input.setCurrentIndex(0)
@@ -119,7 +120,7 @@ class NewSaleTab(QWidget):
             self.payment_method_input.setCurrentIndex(0)
             self.observations_input.clear()
 
-            # Update the table and summary
+            # Llamar al callback para actualizar todos los tabs
             self.update_callback()
 
             QMessageBox.information(self, "Venta añadida", "La venta se ha registrado correctamente.")
@@ -127,3 +128,7 @@ class NewSaleTab(QWidget):
         except Exception as e:
             logging.error(f"Error al añadir venta: {e}")
             QMessageBox.critical(self, "Error inesperado", str(e))
+
+    def update_data_reference(self, new_data):
+        """Update data reference in parent window"""
+        pass

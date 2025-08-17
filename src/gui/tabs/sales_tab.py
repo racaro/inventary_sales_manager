@@ -8,11 +8,12 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QDate
 
 class SalesTableTab(QWidget):
-    def __init__(self, data, handler, update_callback):
+    def __init__(self, data, handler, update_callback, manager=None):
         super().__init__()
         self.data = data
         self.handler = handler
         self.update_callback = update_callback
+        self.manager = manager
         self.init_ui()
 
     def init_ui(self):
@@ -159,8 +160,11 @@ class SalesTableTab(QWidget):
             # Update DataFrame with new value
             self.data.at[row, column_name] = new_value
 
-            # Save updated data to Excel file
-            self.handler.save_data(self.data)
+            # Save updated data WITHOUT backup - use manager if available
+            if self.manager:
+                self.manager.save_sale_data(self.data)
+            else:
+                self.handler.save_data_no_backup(self.data)
 
             # Refresh summary graphs
             self.update_callback()
@@ -191,8 +195,11 @@ class SalesTableTab(QWidget):
             # Update DataFrame
             self.data.at[row, column_name] = new_value
 
-            # Save updated data to Excel file
-            self.handler.save_data(self.data)
+            # Save updated data WITHOUT backup - use manager if available
+            if self.manager:
+                self.manager.save_sale_data(self.data)
+            else:
+                self.handler.save_data_no_backup(self.data)
 
             # Refresh summary graphs
             self.update_callback()
@@ -206,7 +213,13 @@ class SalesTableTab(QWidget):
         try:
             new_value = date_edit.date().toString("yyyy-MM-dd")
             self.data.at[row, column_name] = new_value
-            self.handler.save_data(self.data)
+
+            # Save updated data WITHOUT backup - use manager if available
+            if self.manager:
+                self.manager.save_sale_data(self.data)
+            else:
+                self.handler.save_data_no_backup(self.data)
+
             self.update_callback()
         except Exception as e:
             logging.error(f"Error updating date: {e}")
@@ -249,7 +262,12 @@ class SalesTableTab(QWidget):
         """Sync table, save data, and update summary graphs"""
         try:
             self.sync_table_to_dataframe()
-            self.handler.save_data(self.data)
+
+            if self.manager:
+                self.manager.save_sale_data(self.data)
+            else:
+                self.handler.save_data_no_backup(self.data)
+
             self.update_callback()
         except Exception as e:
             logging.error(f"Error saving and updating graphs: {e}")
@@ -268,8 +286,14 @@ class SalesTableTab(QWidget):
             )
             if response != QMessageBox.Yes:
                 return
+
             self.data = self.data.drop(index=selected_row).reset_index(drop=True)
-            self.handler.save_data(self.data)
+
+            if self.manager:
+                self.manager.save_sale_data(self.data)
+            else:
+                self.handler.save_data_no_backup(self.data)
+
             self.load_table_data()
             self.update_callback()
             QMessageBox.information(self, "Sale deleted", "The sale has been successfully deleted.")
