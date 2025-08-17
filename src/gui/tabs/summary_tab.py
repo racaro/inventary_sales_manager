@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 from PySide6.QtWidgets import (
-    QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+    QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QPushButton, QSpinBox, QMessageBox
 )
 from PySide6.QtCore import Qt
@@ -9,11 +9,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 class SummaryTab(QWidget):
-    def __init__(self, data, gastos_historial, save_gastos_callback, file_path):
+    def __init__(self, data, expense_history, save_expenses_callback, file_path):
         super().__init__()
         self.data = data
-        self.gastos_historial = gastos_historial
-        self.save_gastos_callback = save_gastos_callback
+        self.expense_history = expense_history
+        self.save_expenses_callback = save_expenses_callback
         self.file_path = file_path
         self.init_ui()
 
@@ -23,23 +23,23 @@ class SummaryTab(QWidget):
 
         # Create tab widget for different summary views
         self.summary_tabs = QTabWidget()
-        
+
         # Stock tab
         self.stock_container = QWidget()
         self.stock_layout = QVBoxLayout(self.stock_container)
-        
+
         # Add stock initial input to stock tab
-        stock_inicial_layout = QHBoxLayout()
-        stock_inicial_label = QLabel("Stock inicial Sembra 2023:")
-        self.stock_inicial_input = QSpinBox()
-        self.stock_inicial_input.setMinimum(0)
-        self.stock_inicial_input.setMaximum(10000)
-        self.stock_inicial_input.setValue(1850)  # Default value
-        self.stock_inicial_input.valueChanged.connect(self.update_summary_tab)
-        stock_inicial_layout.addWidget(stock_inicial_label)
-        stock_inicial_layout.addWidget(self.stock_inicial_input)
-        self.stock_layout.addLayout(stock_inicial_layout)
-        
+        initial_stock_layout = QHBoxLayout()
+        initial_stock_label = QLabel("Stock inicial Sembra 2023:")
+        self.initial_stock_input = QSpinBox()
+        self.initial_stock_input.setMinimum(0)
+        self.initial_stock_input.setMaximum(10000)
+        self.initial_stock_input.setValue(1850)  # Default value
+        self.initial_stock_input.valueChanged.connect(self.update_summary_tab)
+        initial_stock_layout.addWidget(initial_stock_label)
+        initial_stock_layout.addWidget(self.initial_stock_input)
+        self.stock_layout.addLayout(initial_stock_layout)
+
         self.summary_tabs.addTab(self.stock_container, "Stock Restante")
 
         # Client tab
@@ -55,30 +55,30 @@ class SummaryTab(QWidget):
         # Gains tab
         self.gains_container = QWidget()
         self.gains_layout = QVBoxLayout(self.gains_container)
-        
+
         # Add expense inputs
-        gastos_layout = QHBoxLayout()
-        gastos_label = QLabel("Introduce los gastos:")
-        self.gastos_input = QLineEdit()
-        self.gastos_input.setPlaceholderText("Introduce los gastos (€)")
-        self.gastos_input.textChanged.connect(self.update_summary_tab)
-        self.tipo_gasto_input = QLineEdit()
-        self.tipo_gasto_input.setPlaceholderText("Tipo de gasto (opcional)")
-        
+        expense_layout = QHBoxLayout()
+        expense_label = QLabel("Introduce los gastos:")
+        self.expense_input = QLineEdit()
+        self.expense_input.setPlaceholderText("Introduce los gastos (€)")
+        self.expense_input.textChanged.connect(self.update_summary_tab)
+        self.expense_type_input = QLineEdit()
+        self.expense_type_input.setPlaceholderText("Tipo de gasto (opcional)")
+
         # Add expense buttons
-        self.btn_agregar_gasto = QPushButton("Añadir gasto")
-        self.btn_agregar_gasto.clicked.connect(self.agregar_gasto)
-        self.btn_resetear_gastos = QPushButton("Resetear gastos")
-        self.btn_resetear_gastos.clicked.connect(self.resetear_gastos)
-        
+        self.btn_add_expense = QPushButton("Añadir gasto")
+        self.btn_add_expense.clicked.connect(self.add_expense)
+        self.btn_reset_expenses = QPushButton("Resetear gastos")
+        self.btn_reset_expenses.clicked.connect(self.reset_expenses)
+
         # Add all widgets to expense layout
-        gastos_layout.addWidget(gastos_label)
-        gastos_layout.addWidget(self.gastos_input)
-        gastos_layout.addWidget(self.tipo_gasto_input)
-        gastos_layout.addWidget(self.btn_agregar_gasto)
-        gastos_layout.addWidget(self.btn_resetear_gastos)
-        
-        self.gains_layout.addLayout(gastos_layout)
+        expense_layout.addWidget(expense_label)
+        expense_layout.addWidget(self.expense_input)
+        expense_layout.addWidget(self.expense_type_input)
+        expense_layout.addWidget(self.btn_add_expense)
+        expense_layout.addWidget(self.btn_reset_expenses)
+
+        self.gains_layout.addLayout(expense_layout)
         self.summary_tabs.addTab(self.gains_container, "Ganancias")
 
         # Add summary tabs to main layout
@@ -94,10 +94,10 @@ class SummaryTab(QWidget):
                 return
 
             # Clear current content of all tabs
-            self._clear_layout(self.stock_layout, preserve_first=1)  # Preserve stock initial input
+            self._clear_layout(self.stock_layout, preserve_first=1)
             self._clear_layout(self.client_layout)
             self._clear_layout(self.product_layout)
-            self._clear_layout(self.gains_layout, preserve_first=1)  # Preserve expense inputs
+            self._clear_layout(self.gains_layout, preserve_first=1)
 
             # Ensure columns are numeric
             self.data["Botellas vendidas"] = pd.to_numeric(self.data["Botellas vendidas"], errors="coerce").fillna(0)
@@ -108,13 +108,13 @@ class SummaryTab(QWidget):
 
             # --- Stock Remaining ---
             self._update_stock_tab()
-            
+
             # --- Sales by Client ---
             self._update_client_tab()
-            
+
             # --- Sales by Product ---
             self._update_product_tab()
-            
+
             # --- Total Gains ---
             self._update_gains_tab()
 
@@ -126,12 +126,12 @@ class SummaryTab(QWidget):
         """Clear all widgets from a layout except for the first n items if specified"""
         if layout is None:
             return
-        
+
         # Get all items that need to be removed
         items_to_remove = []
         for i in range(preserve_first, layout.count()):
             items_to_remove.append(layout.itemAt(i))
-        
+
         # Remove items from the layout
         for item in items_to_remove:
             if item.widget():
@@ -143,28 +143,28 @@ class SummaryTab(QWidget):
     def _update_stock_tab(self):
         """Update the stock tab with remaining stock information"""
         # Initial stock values
-        stock_inicial = {"Sembra 2023": self.stock_inicial_input.value(), "Otro": 0}
+        initial_stock = {"Sembra 2023": self.initial_stock_input.value(), "Otro": 0}
 
         # Sales by product
-        ventas_por_producto = self.data.groupby("Producto")["Botellas vendidas"].sum()
+        sales_by_product = self.data.groupby("Producto")["Botellas vendidas"].sum()
 
-        # Calculate remaining stock for both products
-        stock_restante = {}
-        for producto in stock_inicial:
-            vendido = ventas_por_producto.get(producto, 0)
-            stock_restante[producto] = stock_inicial[producto] - vendido
+        # Calculate remaining stock for all products
+        remaining_stock = {}
+        for product in initial_stock:
+            sold = sales_by_product.get(product, 0)
+            remaining_stock[product] = initial_stock[product] - sold
 
         # Ensure both products are present and in order
         for prod in ["Sembra 2023", "Otro"]:
-            if prod not in stock_restante:
-                stock_restante[prod] = stock_inicial.get(prod, 0)
-        stock_restante_series = pd.Series(stock_restante)[["Sembra 2023", "Otro"]]
+            if prod not in remaining_stock:
+                remaining_stock[prod] = initial_stock.get(prod, 0)
+        remaining_stock_series = pd.Series(remaining_stock)[["Sembra 2023", "Otro"]]
 
         # Draw the chart
         figure_stock = Figure()
         canvas_stock = FigureCanvas(figure_stock)
         ax_stock = figure_stock.add_subplot(111)
-        stock_restante_series.plot(kind="bar", ax=ax_stock, color="green")
+        remaining_stock_series.plot(kind="bar", ax=ax_stock, color="green")
         ax_stock.set_title("Stock Restante por Producto")
         ax_stock.set_ylabel("Cantidad Disponible")
         ax_stock.set_xlabel("Producto")
@@ -172,14 +172,14 @@ class SummaryTab(QWidget):
         self.stock_layout.addWidget(canvas_stock)
 
         # Show remaining stock as text below the chart
-        stock_text = "\n".join([f"{prod}: {cant}" for prod, cant in stock_restante.items()])
+        stock_text = "\n".join([f"{prod}: {cant}" for prod, cant in remaining_stock.items()])
         stock_label = QLabel(f"Stock restante:\n{stock_text}")
         self.stock_layout.addWidget(stock_label)
 
     def _update_client_tab(self):
         """Update the client tab with sales by client information"""
         # List of valid clients
-        clientes_validos = {
+        valid_clients = {
             "Muestra": "Muestra",
             "Distribución": "Distribución",
             "Horeca": "Horeca",
@@ -190,17 +190,17 @@ class SummaryTab(QWidget):
         }
 
         # Normalize the values in the "Cliente" column
-        self.data["Cliente"] = self.data["Cliente"].map(clientes_validos).fillna("Otro")
+        self.data["Cliente"] = self.data["Cliente"].map(valid_clients).fillna("Otro")
 
         # Filter data to include only valid clients
-        clientes_filtrados = self.data[self.data["Cliente"].isin(clientes_validos.values())]
-        ventas_por_cliente = clientes_filtrados.groupby("Cliente")["Botellas vendidas"].sum()
+        filtered_clients = self.data[self.data["Cliente"].isin(valid_clients.values())]
+        sales_by_client = filtered_clients.groupby("Cliente")["Botellas vendidas"].sum()
 
         # Draw the chart
         figure_client = Figure()
         canvas_client = FigureCanvas(figure_client)
         ax_client = figure_client.add_subplot(111)
-        ventas_por_cliente.plot(kind="bar", ax=ax_client, color="blue")
+        sales_by_client.plot(kind="bar", ax=ax_client, color="blue")
         ax_client.set_title("Ventas por Cliente")
         ax_client.set_ylabel("Cantidad Vendida")
         ax_client.set_xlabel("Cliente")
@@ -210,99 +210,99 @@ class SummaryTab(QWidget):
     def _update_product_tab(self):
         """Update the product tab with sales by product information"""
         # Sales by product
-        ventas_por_producto = self.data.groupby("Producto")["Botellas vendidas"].sum()
+        sales_by_product = self.data.groupby("Producto")["Botellas vendidas"].sum()
 
         # Ensure both products are present in the index
         for prod in ["Sembra 2023", "Otro"]:
-            if prod not in ventas_por_producto.index:
-                ventas_por_producto[prod] = 0
+            if prod not in sales_by_product.index:
+                sales_by_product[prod] = 0
 
         # Sort the index so they always appear the same
-        ventas_por_producto = ventas_por_producto[["Sembra 2023", "Otro"]]
+        sales_by_product = sales_by_product[["Sembra 2023", "Otro"]]
 
         # Draw the chart
-        figure_producto = Figure()
-        canvas_producto = FigureCanvas(figure_producto)
-        ax_producto = figure_producto.add_subplot(111)
-        ventas_por_producto.plot(kind="bar", ax=ax_producto, color="orange")
-        ax_producto.set_title("Ventas por Producto")
-        ax_producto.set_ylabel("Cantidad Vendida")
-        ax_producto.set_xlabel("Producto")
-        figure_producto.tight_layout()
-        self.product_layout.addWidget(canvas_producto)
+        figure_product = Figure()
+        canvas_product = FigureCanvas(figure_product)
+        ax_product = figure_product.add_subplot(111)
+        sales_by_product.plot(kind="bar", ax=ax_product, color="orange")
+        ax_product.set_title("Ventas por Producto")
+        ax_product.set_ylabel("Cantidad Vendida")
+        ax_product.set_xlabel("Producto")
+        figure_product.tight_layout()
+        self.product_layout.addWidget(canvas_product)
 
     def _update_gains_tab(self):
         """Update the gains tab with total gains information"""
         # Calculate total gain, expenses, and net gain
-        ganancia_total = self.data["Precio total venta"].sum()
-        gastos = sum(importe for _, importe in self.gastos_historial)
-        ganancia_neta = ganancia_total - gastos
+        total_gain = self.data["Precio total venta"].sum()
+        expenses = sum(amount for _, amount in self.expense_history)
+        net_gain = total_gain - expenses
 
         # Calculate average selling price
-        precio_medio = self.data["Precio botella"].mean()
+        average_price = self.data["Precio botella"].mean()
 
         # Display gains information
-        ganancias_text = (
-            f"Ganancia total: {ganancia_total:.2f} €\n"
-            f"Gastos: {gastos:.2f} €\n"
-            f"Ganancia neta: {ganancia_neta:.2f} €\n"
-            f"Precio medio: {precio_medio:.2f} €"
+        gains_text = (
+            f"Ganancia total: {total_gain:.2f} €\n"
+            f"Gastos: {expenses:.2f} €\n"
+            f"Ganancia neta: {net_gain:.2f} €\n"
+            f"Precio medio: {average_price:.2f} €"
         )
-        ganancias_label = QLabel(ganancias_text)
-        ganancias_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.gains_layout.addWidget(ganancias_label)
+        gains_label = QLabel(gains_text)
+        gains_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.gains_layout.addWidget(gains_label)
 
         # Display total profit by payment method
-        beneficio_por_metodo = self.data.groupby("Metodo de pago")["Precio total venta"].sum()
-        beneficio_text = "Beneficio total por método de pago:\n"
-        for metodo, total in beneficio_por_metodo.items():
-            beneficio_text += f"{metodo}: {total:.2f} €\n"
-        beneficio_label = QLabel(beneficio_text)
-        self.gains_layout.addWidget(beneficio_label)
+        profit_by_method = self.data.groupby("Metodo de pago")["Precio total venta"].sum()
+        profit_text = "Beneficio total por método de pago:\n"
+        for method, total in profit_by_method.items():
+            profit_text += f"{method}: {total:.2f} €\n"
+        profit_label = QLabel(profit_text)
+        self.gains_layout.addWidget(profit_label)
 
         # Display expense history
-        historial_text = "Historial de gastos:\n"
-        if self.gastos_historial:
-            for idx, (tipo, importe) in enumerate(self.gastos_historial, 1):
-                historial_text += f"{idx}. {tipo}: {importe:.2f} €\n"
+        history_text = "Historial de gastos:\n"
+        if self.expense_history:
+            for idx, (expense_type, amount) in enumerate(self.expense_history, 1):
+                history_text += f"{idx}. {expense_type}: {amount:.2f} €\n"
         else:
-            historial_text += "Sin gastos registrados."
-        gastos_historial_label = QLabel(historial_text)
-        self.gains_layout.addWidget(gastos_historial_label)
+            history_text += "Sin gastos registrados."
+        expense_history_label = QLabel(history_text)
+        self.gains_layout.addWidget(expense_history_label)
 
-    def agregar_gasto(self):
+    def add_expense(self):
         """Add a new expense to the history and update the summary"""
         try:
-            tipo = self.tipo_gasto_input.text().strip()
+            expense_type = self.expense_type_input.text().strip()
             try:
-                importe = float(self.gastos_input.text().replace(",", "."))
+                amount = float(self.expense_input.text().replace(",", "."))
             except ValueError:
-                importe = 0.0
-            
-            if importe <= 0:
+                amount = 0.0
+
+            if amount <= 0:
                 QMessageBox.warning(self, "Gasto inválido", "Introduce un importe mayor que cero.")
                 return
-                
-            self.gastos_historial.append((tipo, importe))
-            self.tipo_gasto_input.clear()
-            self.gastos_input.clear()
-            self.save_gastos_callback()
+
+            self.expense_history.append((expense_type, amount))
+            self.expense_type_input.clear()
+            self.expense_input.clear()
+            self.save_expenses_callback()
             self.update_summary_tab()
         except Exception:
             QMessageBox.warning(self, "Gasto inválido", "Introduce un valor numérico para el gasto.")
 
-    def resetear_gastos(self):
+    def reset_expenses(self):
         """Reset the expense history and update the gains tab"""
         try:
-            respuesta = QMessageBox.question(
-                self, 
-                "Confirmar reseteo", 
+            response = QMessageBox.question(
+                self,
+                "Confirmar reseteo",
                 "¿Seguro que quieres borrar todos los gastos?",
                 QMessageBox.Yes | QMessageBox.No
             )
-            if respuesta == QMessageBox.Yes:
-                self.gastos_historial.clear()
-                self.save_gastos_callback()
+            if response == QMessageBox.Yes:
+                self.expense_history.clear()
+                self.save_expenses_callback()
                 self.update_summary_tab()
         except Exception as e:
             logging.error(f"Error resetting expenses: {e}")

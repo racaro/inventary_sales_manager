@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import logging
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, 
+    QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QMessageBox, QComboBox, QDateEdit
 )
 from PySide6.QtCore import Qt, QDate
@@ -18,7 +18,7 @@ class SalesTableTab(QWidget):
     def init_ui(self):
         """Initialize the sales table UI"""
         layout = QVBoxLayout(self)
-        
+
         # Create table
         self.table = QTableWidget()
         self.table.setColumnCount(len(self.handler.columns))
@@ -32,16 +32,16 @@ class SalesTableTab(QWidget):
         self.load_table_data()
 
         # Add buttons
-        btn_actualizar_graficos = QPushButton("Actualizar gráficos")
-        btn_actualizar_graficos.clicked.connect(self.actualizar_graficos_y_guardar)
+        btn_update_charts = QPushButton("Actualizar gráficos")
+        btn_update_charts.clicked.connect(self.update_charts_and_save)
 
-        btn_eliminar_venta = QPushButton("Eliminar venta seleccionada")
-        btn_eliminar_venta.clicked.connect(self.eliminar_venta_seleccionada)
+        btn_delete_sale = QPushButton("Eliminar venta seleccionada")
+        btn_delete_sale.clicked.connect(self.delete_selected_sale)
 
         # Add widgets to layout
         layout.addWidget(self.table)
-        layout.addWidget(btn_actualizar_graficos)
-        layout.addWidget(btn_eliminar_venta)
+        layout.addWidget(btn_update_charts)
+        layout.addWidget(btn_delete_sale)
 
     def load_table_data(self):
         """Load data from DataFrame into the table with dropdown menus in specific columns"""
@@ -49,16 +49,14 @@ class SalesTableTab(QWidget):
             self.table.setRowCount(0)
             if self.data.empty:
                 return
-                
-            # Iterate through DataFrame rows and add them to table
+
             for row_idx, row_data in self.data.iterrows():
                 self.table.insertRow(row_idx)
                 for col_idx, col_name in enumerate(self.handler.columns):
                     value = row_data[col_name]
                     if pd.isna(value):
-                        value = ""  # Handle NaN values
+                        value = ""
 
-                    # Add dropdowns in specific columns
                     if col_name == "Producto":
                         combo = QComboBox()
                         combo.addItems(["Sembra 2023", "Otro"])
@@ -89,7 +87,6 @@ class SalesTableTab(QWidget):
                         self.table.setCellWidget(row_idx, col_idx, combo)
                     elif col_name == "Fecha de venta":
                         try:
-                            # Make sure value is a valid string
                             if isinstance(value, str) and value.strip():
                                 date = QDate.fromString(value, "yyyy-MM-dd")
                             else:
@@ -116,57 +113,48 @@ class SalesTableTab(QWidget):
     def on_table_edit(self, item):
         """Update data and graphs when a cell is edited in the table"""
         try:
-            # Temporarily disconnect itemChanged event to avoid recursion
             self.table.blockSignals(True)
 
             row = item.row()
             col = item.column()
             new_value = item.text()
-
-            # Get column name
             column_name = self.handler.columns[col]
 
-            # Convert value to expected data type
             if column_name in ["Botellas vendidas", "Precio total venta", "Precio botella"]:
-                new_value = pd.to_numeric(new_value, errors="coerce")  # Convert to numeric
+                new_value = pd.to_numeric(new_value, errors="coerce")
 
-                # If "Botellas vendidas" is modified, update "Precio total venta"
                 if column_name == "Botellas vendidas":
-                    precio_botella = pd.to_numeric(self.data.at[row, "Precio botella"], errors="coerce")
-                    if not pd.isna(precio_botella):
-                        precio_total = new_value * precio_botella
-                        self.data.at[row, "Precio total venta"] = round(precio_total, 2)
+                    bottle_price = pd.to_numeric(self.data.at[row, "Precio botella"], errors="coerce")
+                    if not pd.isna(bottle_price):
+                        total_price = new_value * bottle_price
+                        self.data.at[row, "Precio total venta"] = round(total_price, 2)
 
-                        # Update "Precio total venta" cell in table
                         total_col_idx = self.handler.columns.index("Precio total venta")
                         item = self.table.item(row, total_col_idx)
                         if item is None:
-                            item = QTableWidgetItem(str(round(precio_total, 2)))
+                            item = QTableWidgetItem(str(round(total_price, 2)))
                             self.table.setItem(row, total_col_idx, item)
                         else:
-                            item.setText(str(round(precio_total, 2)))
+                            item.setText(str(round(total_price, 2)))
 
-                # If "Precio botella" is modified, update "Precio total venta"
                 elif column_name == "Precio botella":
-                    botellas_vendidas = pd.to_numeric(self.data.at[row, "Botellas vendidas"], errors="coerce")
-                    if not pd.isna(botellas_vendidas):
-                        precio_total = new_value * botellas_vendidas
-                        self.data.at[row, "Precio total venta"] = round(precio_total, 2)
+                    bottles_sold = pd.to_numeric(self.data.at[row, "Botellas vendidas"], errors="coerce")
+                    if not pd.isna(bottles_sold):
+                        total_price = new_value * bottles_sold
+                        self.data.at[row, "Precio total venta"] = round(total_price, 2)
 
-                        # Update "Precio total venta" cell in table
                         total_col_idx = self.handler.columns.index("Precio total venta")
                         item = self.table.item(row, total_col_idx)
                         if item is None:
-                            item = QTableWidgetItem(str(round(precio_total, 2)))
+                            item = QTableWidgetItem(str(round(total_price, 2)))
                             self.table.setItem(row, total_col_idx, item)
                         else:
-                            item.setText(str(round(precio_total, 2)))
+                            item.setText(str(round(total_price, 2)))
 
             elif column_name == "Producto":
-                # Classify products that are not "Sembra 2023" as "Otro"
                 new_value = new_value if new_value == "Sembra 2023" else "Otro"
             else:
-                new_value = str(new_value)  # For other columns, use string
+                new_value = str(new_value)
 
             # Update DataFrame with new value
             self.data.at[row, column_name] = new_value
@@ -190,15 +178,13 @@ class SalesTableTab(QWidget):
         try:
             new_value = combo.currentText()
 
-            # Normalize client value to always be one of the valid ones
             if column_name == "Cliente":
-                clientes_validos = [
+                valid_clients = [
                     "Muestra", "Distribución", "Horeca", "Amigos/Familia", "Público", "Otro"
                 ]
-                if new_value not in clientes_validos:
+                if new_value not in valid_clients:
                     new_value = "Otro"
 
-            # Classify products that are not "Sembra 2023" as "Otro"
             if column_name == "Producto":
                 new_value = new_value if new_value == "Sembra 2023" else "Otro"
 
@@ -241,7 +227,6 @@ class SalesTableTab(QWidget):
                     item = self.table.item(row, col)
                     value = item.text() if item else ""
 
-                # Type conversion based on column
                 if col_name in float_columns:
                     if value == "":
                         value = np.nan
@@ -260,7 +245,7 @@ class SalesTableTab(QWidget):
                             value = 0
                 self.data.at[row, col_name] = value
 
-    def actualizar_graficos_y_guardar(self):
+    def update_charts_and_save(self):
         """Sync table, save data, and update summary graphs"""
         try:
             self.sync_table_to_dataframe()
@@ -270,20 +255,20 @@ class SalesTableTab(QWidget):
             logging.error(f"Error saving and updating graphs: {e}")
             QMessageBox.critical(self, "Error", f"Error saving and updating graphs: {e}")
 
-    def eliminar_venta_seleccionada(self):
+    def delete_selected_sale(self):
         """Delete selected sale in table and update DataFrame and graphs"""
         try:
-            fila_seleccionada = self.table.currentRow()
-            if fila_seleccionada < 0:
+            selected_row = self.table.currentRow()
+            if selected_row < 0:
                 QMessageBox.warning(self, "Invalid selection", "Please select a row to delete.")
                 return
-            respuesta = QMessageBox.question(
+            response = QMessageBox.question(
                 self, "Confirm deletion", "Are you sure you want to delete this sale?",
                 QMessageBox.Yes | QMessageBox.No
             )
-            if respuesta != QMessageBox.Yes:
+            if response != QMessageBox.Yes:
                 return
-            self.data = self.data.drop(index=fila_seleccionada).reset_index(drop=True)
+            self.data = self.data.drop(index=selected_row).reset_index(drop=True)
             self.handler.save_data(self.data)
             self.load_table_data()
             self.update_callback()

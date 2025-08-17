@@ -33,8 +33,8 @@ class StockManager(QMainWindow):
         self.data = self.handler.load_data()
 
         # Initialize expense history
-        self.gastos_historial = []
-        self.load_gastos_historial()
+        self.expense_history = []
+        self.load_expense_history()
 
         # Set up the tabs
         self.setup_ui()
@@ -54,8 +54,8 @@ class StockManager(QMainWindow):
         self.new_sale_tab = NewSaleTab(self.data, self.handler, self.update_summary_tab)
         self.summary_tab = SummaryTab(
             self.data,
-            self.gastos_historial,
-            self.save_gastos_historial,
+            self.expense_history,
+            self.save_expense_history,
             self.file_path
         )
 
@@ -76,33 +76,33 @@ class StockManager(QMainWindow):
     def setup_menu_bar(self):
         """Set up the menu bar with Help menu"""
         menubar = self.menuBar()
-        ayuda_menu = QMenu("Ayuda", self)
-        acerca_action = QAction("Acerca de...", self)
-        acerca_action.triggered.connect(self.mostrar_acerca_de)
-        ayuda_menu.addAction(acerca_action)
-        menubar.addMenu(ayuda_menu)
+        help_menu = QMenu("Ayuda", self)
+        about_action = QAction("Acerca de...", self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+        menubar.addMenu(help_menu)
 
     def update_summary_tab(self):
         """Update the summary tab with the latest data"""
         self.summary_tab.update_summary_tab()
 
-    def load_gastos_historial(self):
+    def load_expense_history(self):
         """Load expense history from Excel file"""
         try:
             import pandas as pd
-            gastos_df = pd.read_excel(self.file_path, sheet_name="Gastos")
-            self.gastos_historial = list(gastos_df.itertuples(index=False, name=None))
+            expense_df = pd.read_excel(self.file_path, sheet_name="Gastos")
+            self.expense_history = list(expense_df.itertuples(index=False, name=None))
         except Exception:
-            self.gastos_historial = []
+            self.expense_history = []
 
-    def save_gastos_historial(self):
+    def save_expense_history(self):
         """Save expense history to Excel file"""
         import pandas as pd
-        gastos_df = pd.DataFrame(self.gastos_historial, columns=["Tipo", "Importe"])
+        expense_df = pd.DataFrame(self.expense_history, columns=["Tipo", "Importe"])
         with pd.ExcelWriter(self.file_path, mode="a", engine="openpyxl", if_sheet_exists="replace") as writer:
-            gastos_df.to_excel(writer, sheet_name="Gastos", index=False)
+            expense_df.to_excel(writer, sheet_name="Gastos", index=False)
 
-    def mostrar_acerca_de(self):
+    def show_about(self):
         """Show about information dialog"""
         QMessageBox.information(
             self,
