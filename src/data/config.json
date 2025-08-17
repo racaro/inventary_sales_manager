@@ -1,0 +1,10 @@
+{
+  "initial_stock": {
+    "Sembra 2023": 1850,
+    "Otro": 0
+  },
+  "app_settings": {
+    "auto_save_interval": 30000,
+    "backup_on_startup": true
+  }
+}
