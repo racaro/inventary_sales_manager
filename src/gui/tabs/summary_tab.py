@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 from PySide6.QtWidgets import (
-    QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+    QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QPushButton, QSpinBox, QMessageBox
 )
 from PySide6.QtCore import Qt
@@ -23,23 +23,23 @@ class SummaryTab(QWidget):
 
         # Create tab widget for different summary views
         self.summary_tabs = QTabWidget()
-        
+
         # Stock tab
         self.stock_container = QWidget()
         self.stock_layout = QVBoxLayout(self.stock_container)
-        
+
         # Add stock initial input to stock tab
         stock_inicial_layout = QHBoxLayout()
         stock_inicial_label = QLabel("Stock inicial Sembra 2023:")
         self.stock_inicial_input = QSpinBox()
         self.stock_inicial_input.setMinimum(0)
         self.stock_inicial_input.setMaximum(10000)
-        self.stock_inicial_input.setValue(1850)  # Default value
+        self.stock_inicial_input.setValue(1850)
         self.stock_inicial_input.valueChanged.connect(self.update_summary_tab)
         stock_inicial_layout.addWidget(stock_inicial_label)
         stock_inicial_layout.addWidget(self.stock_inicial_input)
         self.stock_layout.addLayout(stock_inicial_layout)
-        
+
         self.summary_tabs.addTab(self.stock_container, "Stock Restante")
 
         # Client tab
@@ -55,7 +55,7 @@ class SummaryTab(QWidget):
         # Gains tab
         self.gains_container = QWidget()
         self.gains_layout = QVBoxLayout(self.gains_container)
-        
+
         # Add expense inputs
         gastos_layout = QHBoxLayout()
         gastos_label = QLabel("Introduce los gastos:")
@@ -64,20 +64,20 @@ class SummaryTab(QWidget):
         self.gastos_input.textChanged.connect(self.update_summary_tab)
         self.tipo_gasto_input = QLineEdit()
         self.tipo_gasto_input.setPlaceholderText("Tipo de gasto (opcional)")
-        
+
         # Add expense buttons
         self.btn_agregar_gasto = QPushButton("Añadir gasto")
         self.btn_agregar_gasto.clicked.connect(self.agregar_gasto)
         self.btn_resetear_gastos = QPushButton("Resetear gastos")
         self.btn_resetear_gastos.clicked.connect(self.resetear_gastos)
-        
+
         # Add all widgets to expense layout
         gastos_layout.addWidget(gastos_label)
         gastos_layout.addWidget(self.gastos_input)
         gastos_layout.addWidget(self.tipo_gasto_input)
         gastos_layout.addWidget(self.btn_agregar_gasto)
         gastos_layout.addWidget(self.btn_resetear_gastos)
-        
+
         self.gains_layout.addLayout(gastos_layout)
         self.summary_tabs.addTab(self.gains_container, "Ganancias")
 
@@ -108,13 +108,13 @@ class SummaryTab(QWidget):
 
             # --- Stock Remaining ---
             self._update_stock_tab()
-            
+
             # --- Sales by Client ---
             self._update_client_tab()
-            
+
             # --- Sales by Product ---
             self._update_product_tab()
-            
+
             # --- Total Gains ---
             self._update_gains_tab()
 
@@ -126,12 +126,12 @@ class SummaryTab(QWidget):
         """Clear all widgets from a layout except for the first n items if specified"""
         if layout is None:
             return
-        
+
         # Get all items that need to be removed
         items_to_remove = []
         for i in range(preserve_first, layout.count()):
             items_to_remove.append(layout.itemAt(i))
-        
+
         # Remove items from the layout
         for item in items_to_remove:
             if item.widget():
@@ -278,11 +278,11 @@ class SummaryTab(QWidget):
                 importe = float(self.gastos_input.text().replace(",", "."))
             except ValueError:
                 importe = 0.0
-            
+
             if importe <= 0:
                 QMessageBox.warning(self, "Gasto inválido", "Introduce un importe mayor que cero.")
                 return
-                
+
             self.gastos_historial.append((tipo, importe))
             self.tipo_gasto_input.clear()
             self.gastos_input.clear()
@@ -295,8 +295,8 @@ class SummaryTab(QWidget):
         """Reset the expense history and update the gains tab"""
         try:
             respuesta = QMessageBox.question(
-                self, 
-                "Confirmar reseteo", 
+                self,
+                "Confirmar reseteo",
                 "¿Seguro que quieres borrar todos los gastos?",
                 QMessageBox.Yes | QMessageBox.No
             )

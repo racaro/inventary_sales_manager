@@ -115,10 +115,10 @@ The application uses an Excel file to store wine sales data:
 2. Create the executable:
    ```
    # For Windows
-   pyinstaller --onefile --windowed --icon=resources/app_icon.ico main.py
+   pyinstaller --onefile --windowed main.py
 
    # For macOS
-   pyinstaller --onefile --windowed --icon=resources/app_icon.icns main.py
+   pyinstaller --onefile --windowed main.py
 
    # For Linux
    pyinstaller --onefile --windowed main.py

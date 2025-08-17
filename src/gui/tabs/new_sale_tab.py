@@ -31,7 +31,7 @@ class NewSaleTab(QWidget):
 
         # Product input
         self.producto_input = QComboBox()
-        self.producto_input.addItems(["Seleccione", "Producto1", "Producto2", "Producto3"])
+        self.producto_input.addItems(["Seleccione", "Sembra 2023", "Otro"])
         form_layout.addRow("Producto:", self.producto_input)
 
         # Quantity input
