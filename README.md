@@ -1,14 +1,15 @@
-# Stock Manager
+# Sembra 2023 - Wine Sales Manager
 
-Stock Manager is a desktop application for managing sales and inventory. The application helps track sales, monitor stock levels, and analyze profit margins.
+Wine Sales Manager is a specialized desktop application designed for managing wine sales and inventory for Sembra 2023 wines. The application helps track sales, monitor stock levels, and analyze profit margins specifically tailored for wine distribution business.
 
 ## Features
 
-- Track sales with detailed information (product, quantity, price, client type, payment method)
-- Monitor remaining stock levels
-- View sales analytics by client and product
-- Track expenses and calculate profit margins
-- Visualize data with interactive charts
+- Track wine sales with detailed information (wine type, quantity, price, client type, payment method)
+- Monitor remaining wine stock levels
+- View sales analytics by client and wine product
+- Track business expenses and calculate profit margins
+- Visualize sales data with interactive charts
+- Specialized for wine distribution channels (Horeca, Distribution, Public sales, etc.)
 
 ## Project Structure
 ```
@@ -70,21 +71,22 @@ inventary_sales_manager/
    pip install -r requirements.txt
    ```
 
-### Data File Information
+### Wine Sales Data Management
 
-The application uses an Excel file to store data:
-- By default, it looks for a file called `sales_data.xlsx` in the application directory
-- If the file doesn't exist, it will automatically create a new one with the required structure
+The application uses an Excel file to store wine sales data:
+- By default, it looks for a file called `sales_data.xlsx` in the `data` directory
+- If the file doesn't exist, it will automatically create a new one with the wine sales structure
 - No need to manually create any template file - the application handles this for you
-- All data modifications are automatically backed up in a `backups` folder (created in the application directory)
+- All wine sales modifications are automatically backed up in a `backups` folder
   - Each backup file is named with a timestamp (e.g., `sales_data_backup_20240601_153045.xlsx`)
   - This provides data recovery options in case of accidental changes or data corruption
 
-### Running the Application
+### Running the Wine Sales Manager
 
 ### Method 1: Direct Python Execution
 1. Open your command prompt or terminal
-2. Run the application directly with Python:
+2. Navigate to the project directory
+3. Run the wine sales application:
    ```
    python main.py
    ```
@@ -122,11 +124,11 @@ The application uses an Excel file to store data:
    pyinstaller --onefile --windowed main.py
    ```
 3. Find the executable in the 'dist' folder
-4. Double-click the executable to run the application
+4. Double-click the executable to run the wine sales manager
 
-### Method 4: Running with Docker
+### Method 4: Running with Docker (Recommended for Business Use)
 
-Docker provides a containerized environment that ensures the application runs consistently across different systems.
+Docker provides a professional containerized environment for consistent wine sales management across different systems.
 
 #### Prerequisites
 - Docker Desktop installed on your system
@@ -134,9 +136,9 @@ Docker provides a containerized environment that ensures the application runs co
 
 #### Quick Start with Docker
 1. For Windows users, run the automated script:
-   ```cmd
-   docker-start.bat
-   ```
+```cmd
+scripts\docker-start.bat
+```
 
    For macOS/Linux users:
    ```bash
