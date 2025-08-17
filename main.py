@@ -8,7 +8,6 @@ import logging
 from PySide6.QtWidgets import QApplication
 from src.gui.stock_manager import StockManager
 
-# Configure logging
 logging.basicConfig(
     filename="stock_manager.log",
     level=logging.ERROR,
