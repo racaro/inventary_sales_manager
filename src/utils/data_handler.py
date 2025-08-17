@@ -23,18 +23,13 @@ class ExcelHandler:
         self.file_path = os.path.join(self.data_dir, "sales_data.xlsx")
 
         self.columns = [
-            "Fecha de venta", "Accion", "Producto", "Botellas vendidas",
-            "Precio total venta", "Precio botella", "Cliente",
+            "Fecha de venta", "Accion", "Producto", "Cantidad vendida",
+            "Precio total venta", "Precio unitario", "Cliente",
             "Observaciones", "Metodo de pago"
         ]
 
     def load_data(self):
-        """
-        Load data from the Excel file.
-
-        Returns:
-            pandas.DataFrame: The loaded data
-        """
+        """Load data from Excel file or create a new DataFrame if file doesn't exist"""
         try:
             if os.path.exists(self.file_path):
                 data = pd.read_excel(self.file_path)
@@ -46,22 +41,16 @@ class ExcelHandler:
         except Exception as e:
             logging.error(f"Error loading data: {e}")
             print(f"Error loading data: {e}")
-            # Return empty DataFrame with expected columns
             return pd.DataFrame(columns=self.columns)
 
     def save_data(self, data, create_backup=True):
-        """
-        Save data to the Excel file.
-
-        Args:
-            data (pandas.DataFrame): The data to save
-        """
+        """Save data to Excel file with optional backup"""
         try:
             # Create backup only if requested
             if create_backup:
                 self.create_backup()
 
-            # Save data to Excel
+            # Save data
             data.to_excel(self.file_path, index=False)
             print(f"Data saved successfully. Rows: {len(data)} | Backup: {create_backup}")
 
@@ -71,7 +60,7 @@ class ExcelHandler:
             raise
 
     def save_data_no_backup(self, data):
-        """Save data without creating backup (for internal updates)"""
+        """Save data without creating backup"""
         self.save_data(data, create_backup=False)
 
     def create_backup(self):

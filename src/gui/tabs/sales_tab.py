@@ -60,44 +60,44 @@ class SalesTableTab(QWidget):
 
                     if col_name == "Producto":
                         combo = QComboBox()
-                        combo.addItems(["Sembra 2023", "Otro"])
+                        combo.addItems(["Producto1", "Producto2", "Producto3", "Otro"])
                         combo.setCurrentText(value)
                         combo.currentIndexChanged.connect(
-                            lambda _, r=row_idx, c=col_name: self.on_combo_change(r, c, combo))
+                            lambda _, r=row_idx, c=col_name, cb=combo: self.on_combo_change(r, c, cb))
                         self.table.setCellWidget(row_idx, col_idx, combo)
                     elif col_name == "Cliente":
                         combo = QComboBox()
                         combo.addItems(["Muestra", "Distribución", "Horeca", "Amigos/Familia", "Público", "Otro"])
                         combo.setCurrentText(value)
                         combo.currentIndexChanged.connect(
-                            lambda _, r=row_idx, c=col_name: self.on_combo_change(r, c, combo))
+                            lambda _, r=row_idx, c=col_name, cb=combo: self.on_combo_change(r, c, cb))
                         self.table.setCellWidget(row_idx, col_idx, combo)
                     elif col_name == "Metodo de pago":
                         combo = QComboBox()
                         combo.addItems(["Bizum", "Efectivo", "Factura", "Otro"])
                         combo.setCurrentText(value)
                         combo.currentIndexChanged.connect(
-                            lambda _, r=row_idx, c=col_name: self.on_combo_change(r, c, combo))
+                            lambda _, r=row_idx, c=col_name, cb=combo: self.on_combo_change(r, c, cb))
                         self.table.setCellWidget(row_idx, col_idx, combo)
                     elif col_name == "Accion":
                         combo = QComboBox()
                         combo.addItems(["Venta", "Otro"])
                         combo.setCurrentText(value)
                         combo.currentIndexChanged.connect(
-                            lambda _, r=row_idx, c=col_name: self.on_combo_change(r, c, combo))
+                            lambda _, r=row_idx, c=col_name, cb=combo: self.on_combo_change(r, c, cb))
                         self.table.setCellWidget(row_idx, col_idx, combo)
                     elif col_name == "Fecha de venta":
                         try:
                             if isinstance(value, str) and value.strip():
                                 date = QDate.fromString(value, "yyyy-MM-dd")
                             else:
-                                date = QDate.currentDate()  # Use current date as default
+                                date = QDate.currentDate()
 
                             date_edit = QDateEdit()
                             date_edit.setCalendarPopup(True)
                             date_edit.setDate(date)
                             date_edit.dateChanged.connect(
-                                lambda _, r=row_idx, c=col_name: self.on_date_change(r, c, date_edit))
+                                lambda _, r=row_idx, c=col_name, de=date_edit: self.on_date_change(r, c, de))
                             self.table.setCellWidget(row_idx, col_idx, date_edit)
                         except Exception as e:
                             logging.error(f"Error processing date: {e}")
@@ -121,13 +121,13 @@ class SalesTableTab(QWidget):
             new_value = item.text()
             column_name = self.handler.columns[col]
 
-            if column_name in ["Botellas vendidas", "Precio total venta", "Precio botella"]:
+            if column_name in ["Cantidad vendida", "Precio total venta", "Precio unitario"]:
                 new_value = pd.to_numeric(new_value, errors="coerce")
 
-                if column_name == "Botellas vendidas":
-                    bottle_price = pd.to_numeric(self.data.at[row, "Precio botella"], errors="coerce")
-                    if not pd.isna(bottle_price):
-                        total_price = new_value * bottle_price
+                if column_name == "Cantidad vendida":
+                    unit_price = pd.to_numeric(self.data.at[row, "Precio unitario"], errors="coerce")
+                    if not pd.isna(unit_price):
+                        total_price = new_value * unit_price
                         self.data.at[row, "Precio total venta"] = round(total_price, 2)
 
                         total_col_idx = self.handler.columns.index("Precio total venta")
@@ -138,10 +138,10 @@ class SalesTableTab(QWidget):
                         else:
                             item.setText(str(round(total_price, 2)))
 
-                elif column_name == "Precio botella":
-                    bottles_sold = pd.to_numeric(self.data.at[row, "Botellas vendidas"], errors="coerce")
-                    if not pd.isna(bottles_sold):
-                        total_price = new_value * bottles_sold
+                elif column_name == "Precio unitario":
+                    quantity = pd.to_numeric(self.data.at[row, "Cantidad vendida"], errors="coerce")
+                    if not pd.isna(quantity):
+                        total_price = new_value * quantity
                         self.data.at[row, "Precio total venta"] = round(total_price, 2)
 
                         total_col_idx = self.handler.columns.index("Precio total venta")
@@ -151,9 +151,6 @@ class SalesTableTab(QWidget):
                             self.table.setItem(row, total_col_idx, item)
                         else:
                             item.setText(str(round(total_price, 2)))
-
-            elif column_name == "Producto":
-                new_value = new_value if new_value == "Sembra 2023" else "Otro"
             else:
                 new_value = str(new_value)
 
@@ -188,9 +185,6 @@ class SalesTableTab(QWidget):
                 ]
                 if new_value not in valid_clients:
                     new_value = "Otro"
-
-            if column_name == "Producto":
-                new_value = new_value if new_value == "Sembra 2023" else "Otro"
 
             # Update DataFrame
             self.data.at[row, column_name] = new_value
@@ -227,8 +221,8 @@ class SalesTableTab(QWidget):
 
     def sync_table_to_dataframe(self):
         """Sync visible data in table with internal DataFrame"""
-        float_columns = ["Precio total venta", "Precio botella"]
-        int_columns = ["Botellas vendidas"]
+        float_columns = ["Precio total venta", "Precio unitario"]
+        int_columns = ["Cantidad vendida"]
         for row in range(self.table.rowCount()):
             for col, col_name in enumerate(self.handler.columns):
                 widget = self.table.cellWidget(row, col)
@@ -289,6 +283,7 @@ class SalesTableTab(QWidget):
 
             self.data = self.data.drop(index=selected_row).reset_index(drop=True)
 
+            # Save updated data WITHOUT backup - use manager if available
             if self.manager:
                 self.manager.save_sale_data(self.data)
             else:

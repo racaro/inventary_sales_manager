@@ -30,16 +30,28 @@ class SummaryTab(QWidget):
 
         # Add stock initial input to stock tab
         initial_stock_layout = QHBoxLayout()
-        initial_stock_label = QLabel("Stock inicial Sembra 2023:")
-        self.initial_stock_input = QSpinBox()
-        self.initial_stock_input.setMinimum(0)
-        self.initial_stock_input.setMaximum(10000)
-        self.initial_stock_input.setValue(1850)  # Default value
-        self.initial_stock_input.valueChanged.connect(self.update_summary_tab)
-        initial_stock_layout.addWidget(initial_stock_label)
-        initial_stock_layout.addWidget(self.initial_stock_input)
-        self.stock_layout.addLayout(initial_stock_layout)
+        QLabel("Stock inicial:")
 
+        # Stock inputs for each product
+        self.initial_stock_inputs = {}
+        products = ["Producto1", "Producto2", "Producto3"]
+
+        for product in products:
+            product_layout = QVBoxLayout()
+            product_label = QLabel(f"{product}:")
+            product_input = QSpinBox()
+            product_input.setMinimum(0)
+            product_input.setMaximum(10000)
+            product_input.setValue(0)  # Default value
+            product_input.valueChanged.connect(self.update_summary_tab)
+
+            product_layout.addWidget(product_label)
+            product_layout.addWidget(product_input)
+
+            self.initial_stock_inputs[product] = product_input
+            initial_stock_layout.addLayout(product_layout)
+
+        self.stock_layout.addLayout(initial_stock_layout)
         self.summary_tabs.addTab(self.stock_container, "Stock Restante")
 
         # Client tab
@@ -100,11 +112,8 @@ class SummaryTab(QWidget):
             self._clear_layout(self.gains_layout, preserve_first=1)
 
             # Ensure columns are numeric
-            self.data["Botellas vendidas"] = pd.to_numeric(self.data["Botellas vendidas"], errors="coerce").fillna(0)
+            self.data["Cantidad vendida"] = pd.to_numeric(self.data["Cantidad vendida"], errors="coerce").fillna(0)
             self.data["Precio total venta"] = pd.to_numeric(self.data["Precio total venta"], errors="coerce").fillna(0)
-
-            # Classify products that aren't "Sembra 2023" as "Otro"
-            self.data["Producto"] = self.data["Producto"].apply(lambda x: x if x == "Sembra 2023" else "Otro")
 
             # --- Stock Remaining ---
             self._update_stock_tab()
@@ -142,23 +151,25 @@ class SummaryTab(QWidget):
 
     def _update_stock_tab(self):
         """Update the stock tab with remaining stock information"""
-        # Initial stock values
-        initial_stock = {"Sembra 2023": self.initial_stock_input.value(), "Otro": 0}
+        # Get initial stock values from inputs
+        initial_stock = {}
+        for product, input_widget in self.initial_stock_inputs.items():
+            initial_stock[product] = input_widget.value()
 
         # Sales by product
-        sales_by_product = self.data.groupby("Producto")["Botellas vendidas"].sum()
+        sales_by_product = self.data.groupby("Producto")["Cantidad vendida"].sum()
 
         # Calculate remaining stock for all products
         remaining_stock = {}
-        for product in initial_stock:
-            sold = sales_by_product.get(product, 0)
-            remaining_stock[product] = initial_stock[product] - sold
+        all_products = ["Producto1", "Producto2", "Producto3", "Otro"]
 
-        # Ensure both products are present and in order
-        for prod in ["Sembra 2023", "Otro"]:
-            if prod not in remaining_stock:
-                remaining_stock[prod] = initial_stock.get(prod, 0)
-        remaining_stock_series = pd.Series(remaining_stock)[["Sembra 2023", "Otro"]]
+        for product in all_products:
+            initial = initial_stock.get(product, 0)
+            sold = sales_by_product.get(product, 0)
+            remaining_stock[product] = initial - sold
+
+        # Create series with all products
+        remaining_stock_series = pd.Series(remaining_stock)[all_products]
 
         # Draw the chart
         figure_stock = Figure()
@@ -194,7 +205,7 @@ class SummaryTab(QWidget):
 
         # Filter data to include only valid clients
         filtered_clients = self.data[self.data["Cliente"].isin(valid_clients.values())]
-        sales_by_client = filtered_clients.groupby("Cliente")["Botellas vendidas"].sum()
+        sales_by_client = filtered_clients.groupby("Cliente")["Cantidad vendida"].sum()
 
         # Draw the chart
         figure_client = Figure()
@@ -210,15 +221,16 @@ class SummaryTab(QWidget):
     def _update_product_tab(self):
         """Update the product tab with sales by product information"""
         # Sales by product
-        sales_by_product = self.data.groupby("Producto")["Botellas vendidas"].sum()
+        sales_by_product = self.data.groupby("Producto")["Cantidad vendida"].sum()
 
-        # Ensure both products are present in the index
-        for prod in ["Sembra 2023", "Otro"]:
+        # Ensure all products are present in the index
+        all_products = ["Producto1", "Producto2", "Producto3", "Otro"]
+        for prod in all_products:
             if prod not in sales_by_product.index:
                 sales_by_product[prod] = 0
 
         # Sort the index so they always appear the same
-        sales_by_product = sales_by_product[["Sembra 2023", "Otro"]]
+        sales_by_product = sales_by_product[all_products]
 
         # Draw the chart
         figure_product = Figure()
@@ -239,7 +251,7 @@ class SummaryTab(QWidget):
         net_gain = total_gain - expenses
 
         # Calculate average selling price
-        average_price = self.data["Precio botella"].mean()
+        average_price = self.data["Precio unitario"].mean()
 
         # Display gains information
         gains_text = (
